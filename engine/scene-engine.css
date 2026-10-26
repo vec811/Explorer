@@ -1,3 +1,5 @@
+/* Shared styles for every scene. Scene-specific values belong in scene.config.js. */
+
 :root {
   --bg: #f7f7f7;
   --surface: #ffffff;
@@ -83,7 +85,7 @@ button { font: inherit; color: inherit; }
 .scene {
   position: relative;
   width: 100%;
-  aspect-ratio: 2500 / 1412;
+  aspect-ratio: 16 / 9; /* replaced by the artboard ratio at runtime */
   overflow: hidden;
   isolation: isolate;
   user-select: none;
@@ -192,7 +194,7 @@ button { font: inherit; color: inherit; }
 
 .card {
   position: relative;
-  scroll-margin-top: calc(64px + min(100vw, 460px) * 1412 / 2500 + 16px);
+  scroll-margin-top: calc(var(--stage-h, 280px) + 16px);
   scroll-margin-bottom: 150px;
   border: 1.5px dashed var(--line-strong);
   border-radius: var(--radius);
@@ -366,6 +368,29 @@ button { font: inherit; color: inherit; }
   font-size: 14px;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* ---------- Scene-only mode (?bare), used to compare against mock-ups ---------- */
+
+body.is-bare { background: #fff; }
+body.is-bare .screen { max-width: none; margin: 0; min-height: 0; padding: 0; border-radius: 0; box-shadow: none; }
+body.is-bare .stage { position: static; box-shadow: none; }
+body.is-bare .topbar,
+body.is-bare .intro,
+body.is-bare .considerations,
+body.is-bare .commit-bar { display: none; }
+
+/* ---------- Config errors ---------- */
+
+.config-error {
+  margin: 16px;
+  padding: 16px;
+  border: 2px solid var(--red);
+  border-radius: 8px;
+  background: var(--red-soft);
+  color: #7a0c13;
+  font: 14px/1.5 ui-monospace, Menlo, monospace;
+  white-space: pre-wrap;
 }
 
 @media (prefers-reduced-motion: reduce) {

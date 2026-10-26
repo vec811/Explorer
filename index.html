@@ -2,46 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Hospitalisation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Preference scenes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=Source+Serif+4:opsz,wght@8..60,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,700&family=Source+Serif+4:opsz,wght@8..60,700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #f7f7f7; --ink: #2b2b2b; --ink-soft: #5a5a5a; --line: #dcdcdc; --red: #d9232e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Nunito Sans", system-ui, sans-serif; }
+    main { max-width: 1040px; margin: 0 auto; padding: 40px 16px 64px; }
+    h1 { margin: 0 0 6px; font-family: "Source Serif 4", Georgia, serif; font-size: 32px; }
+    .lede { margin: 0 0 28px; color: var(--ink-soft); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .scene-card { display: block; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: inherit; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease; }
+    .scene-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0, 0, 0, .08); }
+    .scene-card:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+    .thumb { aspect-ratio: 16 / 9; background: #eceef2 center / cover no-repeat; }
+    .meta { padding: 14px 16px 16px; }
+    .meta h2 { margin: 0 0 4px; font-size: 18px; }
+    .meta p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+    .empty { color: var(--ink-soft); }
+  </style>
 </head>
 <body>
-  <main class="screen">
-    <div class="stage" id="stage">
-      <header class="topbar">
-        <h1 class="topbar__title">Hospitalisation</h1>
-        <button class="topbar__close" type="button" aria-label="Close">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
-        </button>
-      </header>
-
-      <!-- Scene: layers are positioned by app.js from the SCENE config -->
-      <div class="scene" id="scene" role="img" aria-label="Hospital room illustration"></div>
-    </div>
-
-    <section class="intro">
-      <h2 class="intro__headline">Find the right coverage to support your care preferences</h2>
-      <p class="intro__body">Hospitalisation costs vary according to choice of treatment and hospital. With medical inflation at 10%, work out the coverage that best meets your preferences.</p>
-    </section>
-
-    <section class="considerations">
-      <h3 class="considerations__title">Let's work on these considerations:</h3>
-      <div class="cards" id="cards"></div>
-    </section>
-
-    <div class="commit-bar">
-      <p class="commit-bar__status" id="commit-status">0 of 3 preferences chosen</p>
-      <button class="commit-bar__btn" id="commit-btn" type="button" disabled>Confirm my preferences</button>
-      <button class="commit-bar__reset" id="reset-btn" type="button" hidden>Start over</button>
-    </div>
-
-    <p class="sr-only" id="live" aria-live="polite"></p>
+  <main>
+    <h1>Preference scenes</h1>
+    <p class="lede">Interactive illustrations for each coverage topic. Open one to try it at phone size.</p>
+    <div class="grid" id="grid"></div>
   </main>
-
-  <script src="app.js"></script>
+  <script src="scenes/scenes.js"></script>
+  <script>
+    const grid = document.getElementById('grid');
+    const scenes = window.SCENES || [];
+    if (!scenes.length) grid.innerHTML = '<p class="empty">No scenes yet.</p>';
+    for (const s of scenes) {
+      const a = document.createElement('a');
+      a.className = 'scene-card';
+      a.href = `scenes/${encodeURIComponent(s.slug)}/index.html`;
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      if (s.thumbnail) thumb.style.backgroundImage = `url("${s.thumbnail}")`;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const h = document.createElement('h2');
+      h.textContent = s.title;
+      const p = document.createElement('p');
+      p.textContent = s.description || '';
+      meta.append(h, p);
+      a.append(thumb, meta);
+      grid.append(a);
+    }
+  </script>
 </body>
 </html>
