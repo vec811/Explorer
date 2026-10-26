@@ -9,14 +9,18 @@
   const BACKGROUND = { src: 'hospitalisation-empty.svg', x: 0, y: 0, w: 2500, h: 1412 };
   const PATIENT = { src: 'patient.svg', x: 501, y: 324, w: 1257, h: 1126 };
 
-  // The IV pole has to sit behind the specialist slot while the bed foot sits in
-  // front of it, so the patient is drawn twice: a full copy behind the slot and a
-  // copy in front with the pole area (x > 800, y < 585 in patient.svg) clipped out.
-  const PATIENT_FRONT_CLIP = 'polygon(0 0, 63.64% 0, 63.64% 51.95%, 100% 51.95%, 100% 100%, 0 100%)';
+  // The IV pole and bag have to sit behind the specialist slot while the bed foot
+  // sits in front of it, so the patient is drawn twice: a full copy behind the slot
+  // and a copy in front with the drip area clipped out (in patient.svg units:
+  // x > 680 above y 380, and x > 800 above y 585).
+  const PATIENT_FRONT_CLIP = 'polygon(0 0, 54.1% 0, 54.1% 33.75%, 63.64% 33.75%, 63.64% 51.95%, 100% 51.95%, 100% 100%, 0 100%)';
 
-  // `box` is the default (unrevealed) art. Each option shows `src` in the box's
-  // rectangle, bottom-centred and scaled to fit. If a final illustration needs a
-  // different footprint, give the option its own `rect: { x, y, w, h }`.
+  // `box` is the default (unrevealed) art. Each option shows `src` in its `rect`,
+  // or in the box's rectangle when it has none (bottom-centred, scaled to fit).
+  // The option art is exported at 1360/2500 of the scene, so each rect is its
+  // native size × 1.838, placed where the revealed mock-up shows it.
+  const DOCTOR_RECT = { x: 1143, y: 55, w: 603, h: 1254 };
+  const PAY_RECT = { x: 2092, y: 546, w: 301, h: 349 };
   const CATEGORIES = [
     {
       id: 'specialist',
@@ -24,8 +28,8 @@
       desc: 'Consider whether you’d like to have a preferred medical specialist or one who’s assigned by the hospital.',
       box: { src: 'Doctor_box.svg', x: 1318, y: 321, w: 527, h: 943 },
       options: [
-        { id: 'assigned', label: 'Accept any specialist', src: 'Doctor_assigned.svg' },
-        { id: 'choice', label: 'Choose my preferred specialist', src: 'Doctor_choice.svg' },
+        { id: 'assigned', label: 'Accept any specialist', src: 'Doctor_assigned.svg', rect: DOCTOR_RECT },
+        { id: 'choice', label: 'Choose my preferred specialist', src: 'Doctor_choice.svg', rect: DOCTOR_RECT },
       ],
     },
     {
@@ -34,8 +38,8 @@
       desc: 'Get treated in a hospital ward of your choice, with options ranging from single-bedder to shared room.',
       box: { src: 'Ward_box.svg', x: 34, y: 799, w: 564, h: 543 },
       options: [
-        { id: 'shared', label: 'Shared room', src: 'Shared_room.svg' },
-        { id: 'private', label: 'Private room', src: 'armchair.svg' },
+        { id: 'shared', label: 'Shared room', src: 'Shared_room.svg', rect: { x: 0, y: 546, w: 938, h: 860 } },
+        { id: 'private', label: 'Private room', src: 'Armchair.svg', rect: { x: 12, y: 748, w: 608, h: 594 } },
       ],
     },
     {
@@ -44,8 +48,8 @@
       desc: 'Obtain additional support to keep your out-of-pocket expenses in check.',
       box: { src: 'Coverage_box.svg', x: 2085, y: 605, w: 235, h: 177 },
       options: [
-        { id: 'shield', label: 'Use Integrated Shield Plan only', src: 'pay_silver.svg' },
-        { id: 'supplementary', label: 'Through adding supplementary coverage', src: 'pay_gold.svg' },
+        { id: 'shield', label: 'Use Integrated Shield Plan only', src: 'pay_silver.svg', rect: PAY_RECT },
+        { id: 'supplementary', label: 'Through adding supplementary coverage', src: 'pay_gold.svg', rect: PAY_RECT },
       ],
     },
   ];

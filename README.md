@@ -15,17 +15,17 @@ Open `index.html` through any static server, for example `python3 -m http.server
 
 ## Adding the final illustrations
 
-The six option illustrations are placeholders for now. To replace one, overwrite the file in `assets/illustrations/` and keep the same filename (filenames are case-sensitive):
+The six option illustrations live in `assets/illustrations/`. To update one, overwrite the file and keep the same filename. Filenames are case-sensitive on GitHub Pages:
 
 | Category | Option | File |
 | --- | --- | --- |
 | Specialist | Accept any specialist | `Doctor_assigned.svg` |
 | Specialist | Choose my preferred specialist | `Doctor_choice.svg` |
 | Hospital and ward | Shared room | `Shared_room.svg` |
-| Hospital and ward | Private room | `armchair.svg` |
+| Hospital and ward | Private room | `Armchair.svg` |
 | Bill coverage | Use Integrated Shield Plan only | `pay_silver.svg` |
 | Bill coverage | Through adding supplementary coverage | `pay_gold.svg` |
 
-Each illustration is scaled to fit its box's rectangle and sits on the box's bottom edge. If a final illustration needs a different footprint, for example a doctor taller than the box, add a `rect: { x, y, w, h }` to that option in `CATEGORIES` in `app.js`. Use artboard coordinates.
+The option illustrations are exported at 1360/2500 of the scene (the scale of the revealed mock-up), so each option in `CATEGORIES` in `app.js` has a `rect: { x, y, w, h }` in artboard coordinates: its native size × 1.838, placed where the mock-up shows it. If you re-export one at a different size or want to move it, edit its `rect`. An option without a `rect` is fitted into its box's rectangle.
 
-Stacking order, from back to front: background, patient, specialist slot, bed (drawn again so it stays in front of the doctor), ward slot, coverage slot.
+Stacking order, from back to front: background, patient, specialist slot, bed (drawn again without the drip so it stays in front of the doctor while the IV pole and bag stay behind), ward slot, coverage slot.
