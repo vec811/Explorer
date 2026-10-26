@@ -23,12 +23,16 @@
     .meta h2 { margin: 0 0 4px; font-size: 18px; }
     .meta p { margin: 0; font-size: 14px; color: var(--ink-soft); }
     .empty { color: var(--ink-soft); }
+    .guide-link { display: inline-block; margin: -12px 0 28px; color: var(--red); font-weight: 700; text-decoration: none; }
+    .guide-link:hover { text-decoration: underline; }
+    .guide-link:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; border-radius: 4px; }
   </style>
 </head>
 <body>
   <main>
     <h1>Preference scenes</h1>
     <p class="lede">Interactive illustrations for each coverage topic. Open one to try it at phone size.</p>
+    <a class="guide-link" href="guide/index.html">How a scene is made, and how to add yours <span aria-hidden="true">→</span></a>
     <div class="grid" id="grid"></div>
   </main>
   <script src="scenes/scenes.js"></script>

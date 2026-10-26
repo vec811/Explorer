@@ -4,6 +4,8 @@ Interactive mobile screens where users pick their preferences. Each choice opens
 
 ## Making a new scene (designers)
 
+The illustrated guide at [`guide/`](guide/index.html) (live at `https://vec811.github.io/Explorer/guide/`) summarises the whole workflow.
+
 1. Open this repository in [Claude Code](https://claude.ai/code).
 2. Type `/scene-builder`, or just say "I want to make a new scene".
 3. Claude asks for things one step at a time:
@@ -29,6 +31,7 @@ Attach files in the chat, or upload them on GitHub into `scenes/<name>/incoming/
 
 ```
 index.html                    gallery of all scenes
+guide/                        illustrated guide to the workflow and the skill
 engine/                       shared code and styles for every scene
 scenes/scenes.js              list of scenes shown in the gallery
 scenes/<name>/index.html      the scene's page (loads the engine)

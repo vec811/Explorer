@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scene Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: one column that follows a scene from boxes to reveal — what you bring, the steps, what Claude does, the animation library, what you get. */
+  :root {
+    --paper: #f4f4f9;
+    --surface: #ffffff;
+    --art-bg: #ffffff;
+    --ink: #24222a;
+    --muted: #5e5a68;
+    --line: #dcdae5;
+    --red: #d9232e;
+    --red-soft: #fde9eb;
+    --kraft: #ab6142;
+    --kraft-deep: #7f4228;
+    --kraft-soft: #f5e7df;
+    --blanket: #d4d5ea;
+    --ok: #1b8537;
+    --warn: #b26a00;
+    --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --font-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16151b; --surface: #211f28; --art-bg: #f1f0f6; --ink: #f1eff6; --muted: #aca8b8; --line: #36333f;
+      --red: #ff5d66; --red-soft: #3a1d22; --kraft: #cf8a69; --kraft-deep: #a8653f; --kraft-soft: #33241d;
+      --blanket: #3b3c5c; --ok: #4cc26f; --warn: #f0a640; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #16151b; --surface: #211f28; --art-bg: #f1f0f6; --ink: #f1eff6; --muted: #aca8b8; --line: #36333f;
+    --red: #ff5d66; --red-soft: #3a1d22; --kraft: #cf8a69; --kraft-deep: #a8653f; --kraft-soft: #33241d;
+    --blanket: #3b3c5c; --ok: #4cc26f; --warn: #f0a640; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.55; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0; }
+  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; color: var(--ink); }
+  p { margin: 0; }
+  code, .mono { font-family: var(--font-mono); font-size: .86em; }
+  img { max-width: 100%; display: block; }
+  section { padding-block: 56px; border-top: 1px solid var(--line); }
+  .eyebrow { font-size: 12.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--red); }
+  .section-head { display: grid; gap: 8px; margin-bottom: 28px; max-width: 62ch; }
+  .section-head h2 { font-size: clamp(26px, 4vw, 34px); line-height: 1.15; }
+  .section-head p { color: var(--muted); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding-block: 48px 56px; display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); align-items: center; }
+  @media (min-width: 880px) { .hero { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); } }
+  .hero h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.04; letter-spacing: -.01em; margin-block: 10px 16px; }
+  .hero .lede { font-size: 18px; color: var(--muted); max-width: 46ch; }
+  .start { margin-top: 24px; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+  .start kbd { font-family: var(--font-mono); font-weight: 600; font-size: 15px; padding: 3px 8px; border-radius: 6px; background: var(--red); color: #fff; }
+  .start span { color: var(--muted); font-size: 14.5px; }
+
+  .reveal { display: grid; gap: 10px; }
+  .reveal__frame { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--art-bg); aspect-ratio: 1360 / 769; max-width: 100%; }
+  .reveal__frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .45s ease, transform .6s cubic-bezier(.2,.9,.3,1.2); }
+  .reveal__frame .after { opacity: 0; transform: scale(1.03); }
+  .reveal.is-after .after { opacity: 1; transform: none; }
+  .reveal.is-after .before { opacity: 0; }
+  .reveal__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .reveal__caption { font-size: 14px; color: var(--muted); min-width: 0; }
+  .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--surface); }
+  .toggle button { font: inherit; font-size: 14px; font-weight: 700; border: 0; background: none; color: var(--muted); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+  .toggle button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .toggle button:focus-visible, .play:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+  /* ---------- Inputs ---------- */
+  .inputs { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+  .input { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .input h3 { font-size: 20px; }
+  .input p { color: var(--muted); font-size: 15px; }
+  .input ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 15px; display: grid; gap: 4px; }
+  .art-row { display: flex; align-items: flex-end; gap: 10px; height: 92px; padding: 10px; border-radius: 10px; background: var(--art-bg); border: 1px solid var(--line); overflow: hidden; }
+  .art-row img { height: 100%; width: auto; min-width: 0; object-fit: contain; }
+  .art-row .sm { height: 58%; }
+  .copy-sample { border-radius: 10px; background: var(--art-bg); border: 1px solid var(--line); padding: 12px 14px; color: #24222a; height: 92px; overflow: hidden; }
+  .copy-sample b { display: block; font-family: var(--font-display); font-size: 15px; line-height: 1.2; margin-bottom: 4px; }
+  .copy-sample span { font-size: 12px; color: #5e5a68; line-height: 1.35; display: block; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+
+  /* ---------- Steps ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 18px; font-size: 14px; color: var(--muted); }
+  .who { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; }
+  .who--you { background: var(--kraft-soft); color: var(--kraft-deep); }
+  .who--claude { background: var(--red-soft); color: var(--red); }
+  :root[data-theme="dark"] .who--you { color: var(--kraft); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .who--you { color: var(--kraft); } }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; counter-reset: step; }
+  .step { position: relative; display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 16px 14px; }
+  .step__num { counter-increment: step; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--kraft); color: #fff; font-family: var(--font-display); font-size: 22px; font-weight: 700; position: relative; }
+  .step__num::before { content: counter(step); }
+  .step__num::after { content: ""; position: absolute; top: 0; left: 50%; width: 8px; height: 44px; margin-left: -4px; background: rgba(255,255,255,.75); clip-path: polygon(0 0, 100% 0, 100% 22%, 0 22%, 0 78%, 100% 78%, 100% 100%, 0 100%); }
+  .step h3 { font-size: 19px; margin-bottom: 8px; }
+  .step__rows { display: grid; gap: 6px; }
+  .step__row { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: 15px; }
+  .step__row p { color: var(--muted); }
+  .steps-grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 880px) { .steps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .steps { grid-auto-flow: row; } }
+
+  /* ---------- Behind the scenes ---------- */
+  .tools { display: grid; gap: 18px; }
+  .tool { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  @media (min-width: 880px) { .tool { grid-template-columns: minmax(0, .8fr) minmax(0, 1.6fr); align-items: center; } }
+  .tool h3 { font-size: 21px; margin-bottom: 6px; }
+  .tool p { color: var(--muted); font-size: 15px; }
+  .tool .shot { border-radius: 10px; border: 1px solid var(--line); background: #fff; overflow: hidden; }
+  .tool .shot img { width: 100%; height: auto; }
+  .verdicts { display: grid; gap: 6px; margin-top: 12px; font-size: 14.5px; }
+  .verdict { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px; }
+  .verdict b { font-family: var(--font-mono); }
+  .v-ok { color: var(--ok); } .v-check { color: var(--warn); } .v-no { color: var(--red); }
+  .measure-card { display: grid; gap: 10px; }
+  .measure-out { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; background: #1d1b22; color: #e9e7ef; border-radius: 10px; padding: 14px 16px; overflow-x: auto; white-space: pre; }
+  .measure-out .ok { color: #6fd88f; } .measure-out .ck { color: #f3b65a; } .measure-out .no { color: #ff8a90; }
+  .stat { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+
+  /* ---------- Animation library ---------- */
+  .anims { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+  .anim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: grid; min-width: 0; }
+  .stage { position: relative; aspect-ratio: 16 / 10; background: linear-gradient(to bottom, #f4f4fa 0 74%, #f8e9ea 74%); overflow: hidden; }
+  .stage img { position: absolute; left: 50%; bottom: 8%; height: 76%; width: auto; max-width: 70%; object-fit: contain; transform-origin: 50% 100%; translate: -50% 0; }
+  .stage .b { opacity: 0; }
+  .stage .fx { position: absolute; inset: 0; pointer-events: none; }
+  .anim__body { padding: 14px 16px 16px; display: grid; gap: 6px; }
+  .anim__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .anim h3 { font-size: 19px; }
+  .anim h3 code { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--red); background: var(--red-soft); padding: 2px 6px; border-radius: 5px; margin-left: 6px; vertical-align: 2px; }
+  .anim p { color: var(--muted); font-size: 14.5px; }
+  .anim .suits { font-size: 13.5px; color: var(--ink); }
+  .anim .suits b { font-weight: 800; }
+  .play { font: inherit; font-size: 13.5px; font-weight: 800; color: #fff; background: var(--red); border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer; flex: none; }
+  .play:hover { filter: brightness(1.06); }
+  .curtain { position: absolute; top: 4%; bottom: 0; left: 4%; right: 4%; transform-origin: 0 0; transform: scaleX(0); opacity: 0;
+    background: linear-gradient(to bottom, #8f969c 0 5px, transparent 5px), repeating-linear-gradient(90deg, #bcd6dd 0, #e4f0f3 10px, #cfe3e8 16px, #a9c9d1 22px); box-shadow: 3px 0 8px rgba(0,0,0,.15); }
+  .coin, .bit { position: absolute; border-radius: 50%; }
+  .coin { width: 14px; height: 14px; box-shadow: inset 0 0 0 2px rgba(0,0,0,.15); }
+  .bit { width: 8px; height: 5px; border-radius: 1px; }
+
+  /* ---------- Output ---------- */
+  .output { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+  @media (min-width: 880px) { .output { grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); } }
+  .tree { font-family: var(--font-mono); font-size: 13.5px; line-height: 1.75; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; overflow-x: auto; white-space: pre; color: var(--ink); }
+  .tree .c { color: var(--muted); }
+  .tree .k { color: var(--red); font-weight: 600; }
+  .link { margin-top: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 6px; }
+  .link .url { font-family: var(--font-mono); font-size: 14px; word-break: break-all; }
+  .link .url b { color: var(--red); }
+  .link p { color: var(--muted); font-size: 14.5px; }
+  .phone { justify-self: center; width: min(300px, 100%); border-radius: 30px; padding: 10px; background: #1d1b22; box-shadow: 0 18px 40px rgba(20, 16, 30, .18); }
+  .phone img { border-radius: 22px; width: 100%; height: auto; }
+
+  /* ---------- Notes ---------- */
+  .notes { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+  .note { border-left: 3px solid var(--kraft); padding: 4px 0 4px 14px; display: grid; gap: 4px; }
+  .note h3 { font-size: 17px; font-family: var(--font-body); font-weight: 800; }
+  .note p { color: var(--muted); font-size: 15px; }
+
+  footer { padding-block: 32px 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal__frame img { transition: opacity .2s ease; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Claude skill · scene-builder</div>
+      <h1>Hand over the art. Get a working scene.</h1>
+      <p class="lede">Scene Builder turns your illustrations, mock-ups and copy into an interactive preference screen. Users pick options, the boxes burst open, and the matching art springs out. Claude asks for one thing at a time and handles the code.</p>
+      <div class="start"><span>Open the repo in Claude Code and type</span><kbd>/scene-builder</kbd></div>
+    </div>
+    <figure class="reveal" id="reveal" style="margin:0">
+      <div class="reveal__frame">
+        <img class="before" src="../scenes/hospitalisation/reference/default.webp" alt="The hospital scene before any choice: brown boxes stand where the doctor, the second bed and the bill clipboard will appear.">
+        <img class="after" src="../scenes/hospitalisation/reference/revealed.png" alt="The hospital scene after choosing: a doctor, a shared-room patient and a You pay clipboard have replaced the boxes.">
+      </div>
+      <div class="reveal__bar">
+        <figcaption class="reveal__caption" id="reveal-caption">Before a choice: one box per question.</figcaption>
+        <div class="toggle" role="group" aria-label="Scene state">
+          <button type="button" id="btn-before" aria-pressed="true">Boxes</button>
+          <button type="button" id="btn-after" aria-pressed="false">Revealed</button>
+        </div>
+      </div>
+    </figure>
+  </header>
+
+  <section aria-labelledby="bring">
+    <div class="section-head">
+      <div class="eyebrow">What you bring</div>
+      <h2 id="bring">Four things from the designer. Filenames don’t matter.</h2>
+      <p>Attach them in the chat, or upload them on GitHub. Claude works out which file is which and asks you to confirm.</p>
+    </div>
+    <div class="inputs">
+      <article class="input">
+        <div class="copy-sample"><b>Find the right coverage to support your care preferences</b><span>Hospitalisation costs vary according to choice of treatment and hospital…</span></div>
+        <h3>Words</h3>
+        <p>Screen title, headline and body copy. A screenshot of the app screen is enough: Claude reads the text off it.</p>
+      </article>
+      <article class="input">
+        <div class="art-row"><img src="../scenes/hospitalisation/assets/Doctor_box.svg" alt="Tall box"><img src="../scenes/hospitalisation/assets/Ward_box.svg" alt="Wide box" class="sm"><img src="../scenes/hospitalisation/assets/Coverage_box.svg" alt="Small box" class="sm"></div>
+        <h3>Illustrations</h3>
+        <ul>
+          <li>The empty background</li>
+          <li>Everything shown before a choice, with one box per question</li>
+          <li>One illustration per option</li>
+        </ul>
+      </article>
+      <article class="input">
+        <div class="art-row" style="padding:0"><img src="../scenes/hospitalisation/reference/revealed.png" alt="Revealed mock-up" style="width:100%;height:100%;object-fit:cover"></div>
+        <h3>Mock-ups</h3>
+        <p>The whole scene, full frame, any size: one with the boxes and one or more with options revealed. Used only to measure positions.</p>
+      </article>
+      <article class="input">
+        <div class="chips" style="min-height:92px;align-content:center">
+          <span class="chip">Specialist</span><span class="chip">Hospital and ward</span><span class="chip">Bill coverage</span>
+          <span class="chip">Accept any specialist</span><span class="chip">Private room</span><span class="chip">+ supplementary</span>
+        </div>
+        <h3>Questions and options</h3>
+        <p>Each card’s title and description, its options, which art each option reveals, and an animation style.</p>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="steps">
+    <div class="section-head">
+      <div class="eyebrow">The guided steps</div>
+      <h2 id="steps">Eight steps, one question at a time</h2>
+      <p>The first three are a conversation. After that Claude builds, measures and checks on its own, then comes back with screenshots.</p>
+    </div>
+    <div class="legend"><span class="who who--you">You</span> what the designer does <span class="who who--claude">Claude</span> what Claude does</div>
+    <ol class="steps steps-grid">
+      <li class="step"><span class="step__num" aria-hidden="true"></span><div><h3>Name and words</h3><div class="step__rows">
+        <div class="step__row"><span class="who who--you">You</span><p>Share the title, headline and body copy, or a screenshot.</p></div>
+        <div class="step__row"><span class="who who--claude">Claude</span><p>Reads the copy, confirms it and suggests a short name for the link.</p></div></div></div></li>
+      <li class="step"><span class="step__num" aria-hidden="true"></span><div><h3>Files</h3><div class="step__rows">
+        <div class="step__row"><span class="who who--you">You</span><p>Attach the background, the boxes, the option art and the mock-ups.</p></div>
+        <div class="step__row"><span class="who who--claude">Claude</span><p>Makes a contact sheet, says which file is which and flags anything missing.</p></div></div></div></li>
+      <li class="step"><span class="step__num" aria-hidden="true"></span><div><h3>Questions and options</h3><div class="step__rows">
+        <div class="step__row"><span class="who who--you">You</span><p>Give each card’s text and options, and pick an animation style.</p></div>
+        <div class="step__row"><span class="who who--claude">Claude</span><p>Matches options to art and recommends a style for each question.</p></div></div></div></li>
+      <li class="step"><span class="step__num" aria-hidden="true"></span><div><h3>Build</h3><div class="step__rows">
+        <div class="step__row"><span class="who who--claude">Claude</span><p>Creates the scene’s folder and page, and fills in its settings file.</p></div></div></div></li>
+      <li class="step"><span class="step__num" aria-hidden="true"></span><div><h3>Place the art</h3><div class="step__rows">
+        <div class="step__row"><span class="who who--claude">Claude</span><p>Finds each illustration in your mock-ups to get its exact position and size.</p></div></div></div></li>
+      <li class="step"><span class="step__num" aria-hidden="true"></span><div><h3>Layer order</h3><div class="step__rows">
+        <div class="step__row"><span class="who who--claude">Claude</span><p>Works out what sits in front of what, like the doctor standing behind the bed but in front of the drip.</p></div></div></div></li>
+      <li class="step"><span class="step__num" aria-hidden="true"></span><div><h3>Check</h3><div class="step__rows">
+        <div class="step__row"><span class="who who--claude">Claude</span><p>Screenshots every state, compares them with your mock-ups, captures the animations and checks for broken files.</p></div></div></div></li>
+      <li class="step"><span class="step__num" aria-hidden="true"></span><div><h3>Share</h3><div class="step__rows">
+        <div class="step__row"><span class="who who--claude">Claude</span><p>Sends the screenshots, publishes the scene and gives you the link.</p></div>
+        <div class="step__row"><span class="who who--you">You</span><p>Ask for changes in plain words.</p></div></div></div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="behind">
+    <div class="section-head">
+      <div class="eyebrow">Behind the scenes</div>
+      <h2 id="behind">How Claude sees, measures and checks</h2>
+      <p>The skill comes with four small scripts. These are real outputs from the hospitalisation scene.</p>
+    </div>
+    <div class="tools">
+      <article class="tool">
+        <div><h3>Sees every file</h3><p>Claude can’t open an SVG by eye, so it renders all your uploads into one labelled sheet with their sizes. That’s how it tells the doctor box from the ward box before asking you to confirm.</p></div>
+        <div class="shot"><img src="img/look.webp" alt="Contact sheet of the hospital scene’s files: an armchair, three boxes of different sizes, two doctors with Assigned and My choice badges, a shared-room bed, the empty background, the patient and two You pay clipboards." loading="lazy"></div>
+      </article>
+      <article class="tool">
+        <div class="measure-card">
+          <h3>Measures from your mock-ups</h3>
+          <p>Each illustration is searched for in every mock-up, at the scene’s scale and at the mock-up’s scale. Art drawn smaller still lands in the right place.</p>
+          <div><div class="stat">±1 px</div><p>Matched the positions found by hand for the hospital scene.</p></div>
+          <div class="verdicts">
+            <div class="verdict"><b class="v-ok">✓</b><span><b>Found:</b> used as is.</span></div>
+            <div class="verdict"><b class="v-check">~</b><span><b>Check:</b> probably right, confirmed in a preview.</span></div>
+            <div class="verdict"><b class="v-no">✗</b><span><b>Not found:</b> the art isn’t in any mock-up, so it’s placed by hand and Claude tells you.</span></div>
+          </div>
+        </div>
+        <div class="measure-out" role="img" aria-label="Measuring output for the hospital scene"><span class="ok">✓</span> patient.svg        score 0.97  { x: 501, y: 324, w: 1257, h: 1126 }  ×1
+<span class="ok">✓</span> Doctor_box.svg     score 0.77  { x: 1318, y: 321, w: 527, h: 943 }   ×1
+<span class="ok">✓</span> Ward_box.svg       score 0.99  { x: 33, y: 798, w: 564, h: 543 }     ×1
+<span class="ok">✓</span> Shared_room.svg    score 0.95  { x: 0, y: 546, w: 937, h: 860 }      ×1.838
+<span class="ck">~</span> Doctor_choice.svg  score 0.64  { x: 1143, y: 55, w: 603, h: 1254 }  ×1.838
+<span class="ck">~</span> pay_gold.svg       score 0.67  { x: 2092, y: 546, w: 301, h: 349 }   ×1.838
+<span class="no">✗</span> pay_silver.svg     not found in the mock-ups: place it by hand
+<span class="no">✗</span> Armchair.svg       not found in the mock-ups: place it by hand</div>
+      </article>
+      <article class="tool">
+        <div><h3>Compares with the mock-up</h3><p>Your mock-up, the build in the same state, and the difference between them. Black means identical. Here only the new badge and shield light up, because they were added after the mock-up.</p></div>
+        <div class="shot"><img src="img/compare.webp" alt="Three panels: the revealed mock-up, the build, and a mostly black difference image where only the My choice badge and the shield glow." loading="lazy"></div>
+      </article>
+      <article class="tool">
+        <div><h3>Shows every animation, frame by frame</h3><p>Each box opening and each swap is captured as a strip of frames, so problems like art flying through furniture get caught before you see them.</p></div>
+        <div class="shot"><img src="img/anim.webp" alt="Eight frames of the bill coverage animations: the box bursting open into the silver clipboard, then the gold clipboard slamming down with coins." loading="lazy"></div>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="anim-lib">
+    <div class="section-head">
+      <div class="eyebrow">Animation library</div>
+      <h2 id="anim-lib">Pick how each question swaps its art</h2>
+      <p>The first choice always opens the box. Switching to another option plays the style you pick for that question. Press Play to try each one.</p>
+    </div>
+    <div class="anims" id="anims">
+      <article class="anim" data-kind="unbox" data-a="../scenes/hospitalisation/assets/Doctor_box.svg" data-b="../scenes/hospitalisation/assets/Doctor_choice.svg">
+        <div class="stage"><img class="a" alt=""><img class="b" alt=""><div class="fx"></div></div>
+        <div class="anim__body"><div class="anim__top"><h3>Unbox</h3><button class="play" type="button">Play</button></div>
+          <p>The box hops, wobbles and bursts in confetti, and the art springs out.</p><p class="suits"><b>Always</b> the first choice in a question</p></div>
+      </article>
+      <article class="anim" data-kind="walk" data-a="../scenes/hospitalisation/assets/Doctor_assigned.svg" data-b="../scenes/hospitalisation/assets/Doctor_choice.svg">
+        <div class="stage"><img class="a" alt=""><img class="b" alt=""><div class="fx"></div></div>
+        <div class="anim__body"><div class="anim__top"><h3>Walk <code>walk</code></h3><button class="play" type="button">Play</button></div>
+          <p>One figure strolls off, the other strolls in, skids to a stop and hops.</p><p class="suits"><b>Suits</b> people and animals</p></div>
+      </article>
+      <article class="anim" data-kind="curtain" data-a="../scenes/hospitalisation/assets/Shared_room.svg" data-b="../scenes/hospitalisation/assets/Armchair.svg">
+        <div class="stage"><img class="a" alt=""><img class="b" alt=""><div class="curtain"></div><div class="fx"></div></div>
+        <div class="anim__body"><div class="anim__top"><h3>Curtain <code>curtain</code></h3><button class="play" type="button">Play</button></div>
+          <p>A privacy curtain swishes across and pulls back on the new art.</p><p class="suits"><b>Suits</b> rooms, places and big furniture</p></div>
+      </article>
+      <article class="anim" data-kind="slam" data-a="../scenes/hospitalisation/assets/pay_silver.svg" data-b="../scenes/hospitalisation/assets/pay_gold.svg">
+        <div class="stage"><img class="a" alt=""><img class="b" alt=""><div class="fx"></div></div>
+        <div class="anim__body"><div class="anim__top"><h3>Slam <code>slam</code></h3><button class="play" type="button">Play</button></div>
+          <p>The old art is flicked away, and the new one slams down with a shake and a burst of coins.</p><p class="suits"><b>Suits</b> money, documents, objects</p></div>
+      </article>
+      <article class="anim" data-kind="pop" data-a="../scenes/hospitalisation/assets/Armchair.svg" data-b="../scenes/hospitalisation/assets/Shared_room.svg">
+        <div class="stage"><img class="a" alt=""><img class="b" alt=""><div class="fx"></div></div>
+        <div class="anim__body"><div class="anim__top"><h3>Pop <code>pop</code></h3><button class="play" type="button">Play</button></div>
+          <p>The old art shrinks into a puff and the new one pops up.</p><p class="suits"><b>Suits</b> anything. The default.</p></div>
+      </article>
+      <article class="anim" data-kind="flip" data-a="../scenes/hospitalisation/assets/pay_gold.svg" data-b="../scenes/hospitalisation/assets/pay_silver.svg">
+        <div class="stage"><img class="a" alt=""><img class="b" alt=""><div class="fx"></div></div>
+        <div class="anim__body"><div class="anim__top"><h3>Flip <code>flip</code></h3><button class="play" type="button">Play</button></div>
+          <p>A quick card flip with a twinkle.</p><p class="suits"><b>Suits</b> badges, cards, flat objects</p></div>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="get">
+    <div class="section-head">
+      <div class="eyebrow">What you get</div>
+      <h2 id="get">One page per scene, all sharing one engine</h2>
+      <p>Each scene is its own folder with its own link. A fix or a new animation in the shared engine reaches every scene at once.</p>
+    </div>
+    <div class="output">
+      <div>
+        <div class="tree" role="img" aria-label="Folder structure"><span class="k">index.html</span>                    <span class="c">gallery of every scene</span>
+engine/                       <span class="c">shared screen, animations, styles</span>
+scenes/
+  hospitalisation/
+    index.html                <span class="c">the scene’s page</span>
+    <span class="k">scene.config.js</span>           <span class="c">copy, options, positions, layers</span>
+    assets/                   <span class="c">your illustrations</span>
+    reference/                <span class="c">your mock-ups, for checks only</span>
+  <span class="k">your-next-scene/</span>          <span class="c">made by /scene-builder</span>
+.claude/skills/scene-builder/ <span class="c">the skill, its guide and scripts</span></div>
+        <div class="link">
+          <div class="url">vec811.github.io/Explorer/scenes/<b>your-scene</b>/</div>
+          <p>Each scene gets its own link once it’s merged into the branch GitHub Pages publishes. Every scene also appears in the gallery at the site root.</p>
+        </div>
+      </div>
+      <div class="phone"><img src="img/phone.webp" alt="The hospitalisation scene at phone size: title bar, the illustration with boxes, the headline, and the Specialist card open." loading="lazy"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="tips">
+    <div class="section-head">
+      <div class="eyebrow">Good to know</div>
+      <h2 id="tips">Four things that save a round trip</h2>
+    </div>
+    <div class="notes">
+      <div class="note"><h3>Export mock-ups full frame</h3><p>The whole scene at any size, never a crop. Measuring relies on it, and Claude warns you if a mock-up looks cropped.</p></div>
+      <div class="note"><h3>Show every option somewhere</h3><p>Art that appears in no mock-up gets placed by hand next to its box. It works, but a mock-up makes it exact.</p></div>
+      <div class="note"><h3>Filenames are case-sensitive</h3><p>On the live site <span class="mono">Armchair.svg</span> and <span class="mono">armchair.svg</span> are different files. Claude keeps your names and checks they match.</p></div>
+      <div class="note"><h3>The repository is public</h3><p>Anything uploaded, including mock-ups, can be seen by anyone. Keep confidential work out, or make the repository private.</p></div>
+    </div>
+  </section>
+
+  <footer><p style="margin-bottom:8px"><a href="../index.html" style="color:var(--red);font-weight:700">← All scenes</a></p>Scene Builder lives in <span class="mono">.claude/skills/scene-builder/</span> in the Explorer repository. Anyone who opens the repo in Claude Code can use it.</footer>
+</div>
+
+<script>
+(() => {
+  // Hero: before and after toggle.
+  const reveal = document.getElementById('reveal');
+  const before = document.getElementById('btn-before');
+  const after = document.getElementById('btn-after');
+  const caption = document.getElementById('reveal-caption');
+  const setState = (isAfter) => {
+    reveal.classList.toggle('is-after', isAfter);
+    before.setAttribute('aria-pressed', String(!isAfter));
+    after.setAttribute('aria-pressed', String(isAfter));
+    caption.textContent = isAfter ? 'After choosing: each box has opened to show the matching art.' : 'Before a choice: one box per question.';
+  };
+  before.addEventListener('click', () => setState(false));
+  after.addEventListener('click', () => setState(true));
+
+  // Animation demos: each Play swaps between the card's two illustrations.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const COLORS = ['#d9232e', '#ab6142', '#24a04d', '#1f5bff', '#f5b400'];
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const T = (s) => `translate(-50%, 0) ${s}`;
+
+  function burst(fx, kind, color) {
+    const n = kind === 'coin' ? 10 : 16;
+    for (let i = 0; i < n; i++) {
+      const d = document.createElement('div');
+      d.className = kind;
+      d.style.left = `${rand(42, 58)}%`;
+      d.style.top = kind === 'coin' ? '62%' : '50%';
+      d.style.background = color || COLORS[i % COLORS.length];
+      fx.append(d);
+      const dx = rand(-110, 110), dy = rand(-90, -30);
+      d.animate([
+        { transform: 'translate(0,0) scale(.5)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) rotate(${rand(-300, 300)}deg) scale(1)`, opacity: 1, offset: .45 },
+        { transform: `translate(${dx * 1.2}px, ${dy + 120}px) rotate(${rand(-500, 500)}deg)`, opacity: 0 },
+      ], { duration: rand(800, 1100), easing: 'cubic-bezier(.2,.7,.3,1)' }).finished.then(() => d.remove());
+    }
+  }
+
+  const SWAPS = {
+    unbox(out, inn, fx) {
+      out.animate([
+        { transform: T('none') }, { transform: T('scale(1.08,.86)'), offset: .18 },
+        { transform: T('translateY(-7%) scale(.94,1.08) rotate(-4deg)'), offset: .42 },
+        { transform: T('translateY(-5%) rotate(4deg)'), offset: .6 },
+        { transform: T('translateY(-6%) rotate(-2deg)'), offset: .74, opacity: 1 },
+        { transform: T('scale(1.35)'), opacity: 0 },
+      ], { duration: 760, easing: 'ease-in-out', fill: 'forwards' });
+      setTimeout(() => burst(fx, 'bit'), 560);
+      return inn.animate([
+        { transform: T('translateY(14%) scale(.2)'), opacity: 0 },
+        { transform: T('translateY(-6%) scale(1.08,1.1)'), opacity: 1, offset: .5 },
+        { transform: T('scale(1.06,.93)'), offset: .7 },
+        { transform: T('none'), opacity: 1 },
+      ], { duration: 820, delay: 560, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
+    },
+    walk(out, inn) {
+      const at = (x, y, r) => T(`translate(${x}%, ${y}%) rotate(${r}deg)`);
+      out.animate([
+        { transform: at(0, 0, 0) }, { transform: at(-4, 0, -4), offset: .15 }, { transform: at(30, -3, 6), offset: .4 },
+        { transform: at(70, 0, 6), offset: .7, opacity: 1 }, { transform: at(140, -3, 6), opacity: 0 },
+      ], { duration: 620, easing: 'ease-in', fill: 'forwards' });
+      return inn.animate([
+        { transform: at(150, 0, -6), opacity: 0 }, { transform: at(110, -3, -6), opacity: 1, offset: .15 },
+        { transform: at(60, 0, -6), offset: .35 }, { transform: at(25, -3, -6), offset: .5 },
+        { transform: at(-8, 0, -9), offset: .65, easing: 'ease-out' }, { transform: at(2, 0, 3), offset: .76 },
+        { transform: T('scale(1.04,.94)'), offset: .84 }, { transform: T('translateY(-6%) scale(.97,1.04)'), offset: .92 },
+        { transform: T('none'), opacity: 1 },
+      ], { duration: 1050, delay: 460, fill: 'both' });
+    },
+    curtain(out, inn, fx, stage) {
+      const c = stage.querySelector('.curtain');
+      c.animate([
+        { transform: 'scaleX(.03)', opacity: .6, easing: 'cubic-bezier(.2,.8,.3,1)' },
+        { transform: 'scaleX(1.03) skewX(-2deg)', opacity: 1, offset: .36 },
+        { transform: 'scaleX(1)', opacity: 1, offset: .6, easing: 'cubic-bezier(.6,0,.4,1)' },
+        { transform: 'scaleX(.03)', opacity: 0 },
+      ], { duration: 1150 });
+      out.animate([{ opacity: 1 }, { opacity: 1, offset: .47 }, { opacity: 0, offset: .48 }, { opacity: 0 }], { duration: 1150, fill: 'forwards' });
+      return inn.animate([
+        { opacity: 0 }, { opacity: 0, offset: .47 }, { opacity: 1, offset: .48, transform: T('none') },
+        { transform: T('none'), offset: .72 }, { transform: T('translateY(-5%) scale(.97,1.05)'), offset: .84 },
+        { transform: T('none'), opacity: 1 },
+      ], { duration: 1150, fill: 'both' });
+    },
+    slam(out, inn, fx, stage, toB) {
+      out.animate([
+        { transform: T('none'), opacity: 1 }, { transform: T('translateY(-10%) rotate(-8deg)'), offset: .3 },
+        { transform: T('translate(70%, -150%) rotate(170deg) scale(.5)'), opacity: 0 },
+      ], { duration: 440, easing: 'ease-in', fill: 'forwards' });
+      setTimeout(() => {
+        burst(fx, 'coin', toB ? '#f5b400' : '#c9ced6');
+        stage.animate([{ transform: 'none' }, { transform: 'translate(-3px,2px)' }, { transform: 'translate(3px,-2px)' }, { transform: 'none' }], { duration: 260 });
+      }, 550);
+      return inn.animate([
+        { transform: T('translateY(-160%) rotate(-14deg)'), opacity: 0, easing: 'ease-in' },
+        { transform: T('translateY(-120%) rotate(-10deg)'), opacity: 1, offset: .12, easing: 'cubic-bezier(.55,0,1,.45)' },
+        { transform: T('scale(1.2,.76)'), offset: .5, easing: 'ease-out' },
+        { transform: T('translateY(-12%) scale(.93,1.09)'), offset: .68 },
+        { transform: T('none'), opacity: 1 },
+      ], { duration: 660, delay: 220, fill: 'both' });
+    },
+    pop(out, inn, fx) {
+      out.animate([
+        { transform: T('none'), opacity: 1 }, { transform: T('scale(1.06,.9)'), offset: .3 },
+        { transform: T('scale(.2) rotate(-12deg)'), opacity: 0 },
+      ], { duration: 320, easing: 'ease-in', fill: 'forwards' });
+      setTimeout(() => burst(fx, 'bit'), 260);
+      return inn.animate([
+        { transform: T('translateY(10%) scale(.2)'), opacity: 0 },
+        { transform: T('translateY(-5%) scale(1.08,1.1)'), opacity: 1, offset: .55 },
+        { transform: T('scale(1.04,.95)'), offset: .78 }, { transform: T('none'), opacity: 1 },
+      ], { duration: 620, delay: 260, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
+    },
+    flip(out, inn) {
+      out.animate([
+        { transform: T('perspective(600px) rotateY(0)'), opacity: 1 },
+        { transform: T('perspective(600px) rotateY(90deg) scale(.92)'), opacity: 1 },
+      ], { duration: 230, easing: 'cubic-bezier(.5,0,.9,.5)', fill: 'forwards' });
+      return inn.animate([
+        { transform: T('perspective(600px) rotateY(-90deg) scale(.92)'), opacity: 1 },
+        { transform: T('perspective(600px) rotateY(12deg) scale(1.04)'), offset: .65 },
+        { transform: T('perspective(600px) rotateY(0)'), opacity: 1 },
+      ], { duration: 460, delay: 230, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' });
+    },
+  };
+
+  document.querySelectorAll('.anim').forEach((card) => {
+    const stage = card.querySelector('.stage');
+    const fx = card.querySelector('.fx');
+    const imgs = [card.querySelector('.a'), card.querySelector('.b')];
+    imgs[0].src = card.dataset.a;
+    imgs[1].src = card.dataset.b;
+    imgs.forEach((img) => { img.style.translate = 'none'; img.style.transform = T('none'); });
+    let showing = 0;
+    let busy = false;
+    const kind = card.dataset.kind;
+    const settle = () => {
+      imgs.forEach((img, i) => {
+        img.getAnimations().forEach((a) => a.cancel());
+        img.style.opacity = i === showing ? '1' : '0';
+        img.style.transform = T('none');
+      });
+    };
+    settle();
+    card.querySelector('.play').addEventListener('click', async () => {
+      if (busy) return;
+      busy = true;
+      const out = imgs[showing];
+      const inn = imgs[1 - showing];
+      const toB = showing === 0;
+      // Unbox always starts from the box.
+      if (kind === 'unbox' && showing === 1) { showing = 0; settle(); busy = false; card.querySelector('.play').click(); return; }
+      inn.style.opacity = '0';
+      let anim;
+      if (reduce.matches) {
+        out.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: 'forwards' });
+        anim = inn.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: 'both' });
+      } else {
+        anim = SWAPS[kind](out, inn, fx, stage, toB);
+      }
+      try { await anim.finished; } catch (e) {}
+      showing = 1 - showing;
+      settle();
+      busy = false;
+    });
+  });
+})();
+</script>
+</body>
+</html>

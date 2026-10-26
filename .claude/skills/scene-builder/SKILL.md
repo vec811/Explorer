@@ -128,4 +128,4 @@ The script must report no errors and no missing files. Fix anything, then run it
 
 - **New version of an art file**: overwrite it in `assets/`. Re-run `measure.cjs` on that file if its size changed, then `preview.cjs`.
 - **Copy, options or animation changes**: edit `scene.config.js`, then run `preview.cjs`.
-- **A new kind of animation or behaviour**: add it to the engine in a general way, document it in [reference.md](reference.md), then run `preview.cjs` on **every** scene to check none of them changed.
+- **A new kind of animation or behaviour**: add it to the engine in a general way, and document it in [reference.md](reference.md) and in the animation library section of `guide/index.html`. Then run `preview.cjs` on **every** scene to check none of them changed.
