@@ -15,7 +15,8 @@
   // x > 680 above y 380, and x > 800 above y 585).
   const PATIENT_FRONT_CLIP = 'polygon(0 0, 54.1% 0, 54.1% 33.75%, 63.64% 33.75%, 63.64% 51.95%, 100% 51.95%, 100% 100%, 0 100%)';
 
-  // `box` is the default (unrevealed) art. Each option shows `src` in its `rect`,
+  // `box` is the default (unrevealed) art. `swap` names the animation that plays
+  // when switching between the two options (see SWAPS). Each option shows `src` in its `rect`,
   // or in the box's rectangle when it has none (bottom-centred, scaled to fit).
   // The option art is exported at 1360/2500 of the scene, so each rect is its
   // native size × 1.838, placed where the revealed mock-up shows it.
@@ -27,6 +28,7 @@
       title: 'Specialist',
       desc: 'Consider whether you’d like to have a preferred medical specialist or one who’s assigned by the hospital.',
       box: { src: 'Doctor_box.svg', x: 1318, y: 321, w: 527, h: 943 },
+      swap: 'walk',
       options: [
         { id: 'assigned', label: 'Accept any specialist', src: 'Doctor_assigned.svg', rect: DOCTOR_RECT },
         { id: 'choice', label: 'Choose my preferred specialist', src: 'Doctor_choice.svg', rect: DOCTOR_RECT },
@@ -37,6 +39,7 @@
       title: 'Hospital and ward',
       desc: 'Get treated in a hospital ward of your choice, with options ranging from single-bedder to shared room.',
       box: { src: 'Ward_box.svg', x: 34, y: 799, w: 564, h: 543 },
+      swap: 'curtain',
       options: [
         { id: 'shared', label: 'Shared room', src: 'Shared_room.svg', rect: { x: 0, y: 546, w: 938, h: 860 } },
         { id: 'private', label: 'Private room', src: 'Armchair.svg', rect: { x: 12, y: 748, w: 608, h: 594 } },
@@ -47,9 +50,10 @@
       title: 'Bill coverage',
       desc: 'Obtain additional support to keep your out-of-pocket expenses in check.',
       box: { src: 'Coverage_box.svg', x: 2085, y: 605, w: 235, h: 177 },
+      swap: 'slam',
       options: [
-        { id: 'shield', label: 'Use Integrated Shield Plan only', src: 'pay_silver.svg', rect: PAY_RECT },
-        { id: 'supplementary', label: 'Through adding supplementary coverage', src: 'pay_gold.svg', rect: PAY_RECT },
+        { id: 'shield', label: 'Use Integrated Shield Plan only', src: 'pay_silver.svg', rect: PAY_RECT, coin: '#c9ced6' },
+        { id: 'supplementary', label: 'Through adding supplementary coverage', src: 'pay_gold.svg', rect: PAY_RECT, coin: '#f5b400' },
       ],
     },
   ];
@@ -159,7 +163,7 @@
 
     slots[cat.id] = {
       el, cat, boxFrame, frames: { box: boxFrame }, visible: boxFrame,
-      token: 0, anims: [], timers: [], hintTimer: null,
+      token: 0, anims: [], timers: [], fx: [], hintTimer: null,
     };
     return el;
   }
@@ -198,8 +202,10 @@
   function settle(slot) {
     slot.anims.forEach((a) => a.cancel());
     slot.timers.forEach(clearTimeout);
+    slot.fx.forEach((el) => el.remove());
     slot.anims = [];
     slot.timers = [];
+    slot.fx = [];
     for (const f of Object.values(slot.frames)) {
       f.el.style.visibility = f === slot.visible ? '' : 'hidden';
       f.img.style.opacity = '';
@@ -226,7 +232,7 @@
     if (reduceMotion.matches) done = crossfade(slot, from, to);
     else if (from === slot.boxFrame) done = unbox(slot, from, to);
     else if (to === slot.boxFrame) done = rebox(slot, from, to);
-    else done = flipSwap(slot, from, to);
+    else done = SWAPS[cat.swap](slot, from, to, opt);
 
     try { await done; } catch { return; }
     if (token === slot.token) settle(slot);
@@ -264,21 +270,109 @@
     ], { duration: 820, delay: BURST_AT, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' })).finished;
   }
 
-  // Switching between two revealed options: a quick card-flip with a twinkle.
-  function flipSwap(slot, from, to) {
-    const OUT = 230;
-    track(slot, from.img.animate([
-      { transform: 'perspective(900px) rotateY(0deg)', opacity: 1 },
-      { transform: 'perspective(900px) rotateY(90deg) scale(0.92)', opacity: 1 },
-    ], { duration: OUT, easing: 'cubic-bezier(.5,0,.9,.5)', fill: 'forwards' }));
+  // Switching between two revealed options plays the category's own swap.
+  const SWAPS = { walk: walkSwap, curtain: curtainSwap, slam: slamSwap };
 
-    later(slot, () => sparkles(to.rect, 4), OUT);
+  // Specialist: shift change. One doctor strolls off, the other strolls in,
+  // skids to a stop and hops.
+  function walkSwap(slot, from, to) {
+    const OUT = 560;
+    const at = (x, y, r) => `translate(${x}%, ${y}%) rotate(${r}deg)`;
+    track(slot, from.img.animate([
+      { transform: at(0, 0, 0) },
+      { transform: at(-4, 0, -4), offset: 0.15 },
+      { transform: at(18, -3, 6), offset: 0.35 },
+      { transform: at(42, 0, 6), offset: 0.55 },
+      { transform: at(70, -3, 6), offset: 0.75, opacity: 1 },
+      { transform: at(100, 0, 6), opacity: 0 },
+    ], { duration: OUT, easing: 'ease-in', fill: 'forwards' }));
+
+    later(slot, () => sparkles(topOf(to.rect), 5), OUT + 700);
 
     return track(slot, to.img.animate([
-      { transform: 'perspective(900px) rotateY(-90deg) scale(0.92)', opacity: 1 },
-      { transform: 'perspective(900px) rotateY(12deg) scale(1.04)', offset: 0.65 },
-      { transform: 'perspective(900px) rotateY(0deg)', opacity: 1 },
-    ], { duration: 460, delay: OUT, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' })).finished;
+      { transform: at(100, 0, -6), opacity: 0 },
+      { transform: at(76, -3, -6), opacity: 1, offset: 0.14 },
+      { transform: at(52, 0, -6), offset: 0.28 },
+      { transform: at(28, -3, -6), offset: 0.42 },
+      { transform: at(-6, 0, -9), offset: 0.6, easing: 'ease-out' },
+      { transform: at(2, 0, 3), offset: 0.72 },
+      { transform: 'translateY(0) scale(1.04, 0.94)', offset: 0.8 },
+      { transform: 'translateY(-6%) scale(0.97, 1.04)', offset: 0.9 },
+      { transform: 'none', opacity: 1 },
+    ], { duration: 1000, delay: OUT - 160, easing: 'linear', fill: 'both' })).finished;
+  }
+
+  // Hospital and ward: a privacy curtain swishes across, then pulls back on the
+  // other room.
+  function curtainSwap(slot, from, to) {
+    const DUR = 1150;
+    const SWAP = 0.47;
+    const s = sceneScale();
+    const x = Math.min(from.rect.x, to.rect.x) - 30;
+    const y = Math.min(from.rect.y, to.rect.y) - 90;
+    const right = Math.max(from.rect.x + from.rect.w, to.rect.x + to.rect.w) + 30;
+
+    const curtain = document.createElement('div');
+    curtain.className = 'fx-curtain';
+    place(curtain, { x, y, w: right - x, h: SCENE.h - y });
+    curtain.style.setProperty('--pleat', `${Math.max(8, 70 * s)}px`);
+    curtain.style.setProperty('--rail', `${Math.max(2, 14 * s)}px`);
+    curtain.style.transformOrigin = '0 0';
+    slot.el.insertBefore(curtain, slot.el.querySelector('.scene__hotspot'));
+    slot.fx.push(curtain);
+
+    track(slot, curtain.animate([
+      { transform: 'scaleX(0.03)', opacity: 0.6, easing: 'cubic-bezier(.2,.8,.3,1)' },
+      { transform: 'scaleX(1.03) skewX(-2deg)', opacity: 1, offset: 0.36 },
+      { transform: 'scaleX(1) skewX(1deg)', opacity: 1, offset: 0.44 },
+      { transform: 'scaleX(1)', opacity: 1, offset: 0.6, easing: 'cubic-bezier(.6,0,.4,1)' },
+      { transform: 'scaleX(0.03)', opacity: 0.6 },
+    ], { duration: DUR, fill: 'forwards' }));
+
+    track(slot, from.img.animate([
+      { opacity: 1 }, { opacity: 1, offset: SWAP }, { opacity: 0, offset: SWAP + 0.01 }, { opacity: 0 },
+    ], { duration: DUR, fill: 'forwards' }));
+
+    later(slot, () => sparkles(to.rect, 6), DUR * 0.85);
+
+    return track(slot, to.img.animate([
+      { opacity: 0, transform: 'none' },
+      { opacity: 0, offset: SWAP },
+      { opacity: 1, offset: SWAP + 0.01, transform: 'none' },
+      { transform: 'none', offset: 0.7 },
+      { transform: 'translateY(-5%) scale(0.97, 1.05)', offset: 0.82 },
+      { transform: 'scale(1.03, 0.96)', offset: 0.92 },
+      { transform: 'none', opacity: 1 },
+    ], { duration: DUR, easing: 'ease-in-out', fill: 'both' })).finished;
+  }
+
+  // Bill coverage: the old clipboard gets flicked away, the new one slams down
+  // with a shake and a burst of coins.
+  function slamSwap(slot, from, to, opt) {
+    const DELAY = 220;
+    const DUR = 660;
+    const IMPACT = 0.5;
+    track(slot, from.img.animate([
+      { transform: 'none', opacity: 1 },
+      { transform: 'translateY(-10%) rotate(-8deg) scale(1.05)', offset: 0.3 },
+      { transform: 'translate(70%, -170%) rotate(170deg) scale(0.5)', opacity: 0 },
+    ], { duration: 440, easing: 'ease-in', fill: 'forwards' }));
+
+    later(slot, () => {
+      coins(to.rect, opt.coin);
+      ring(to.rect);
+      shake();
+      sparkles(to.rect, 4);
+    }, DELAY + DUR * IMPACT);
+
+    return track(slot, to.img.animate([
+      { transform: 'translateY(-240%) rotate(-14deg)', opacity: 0, easing: 'ease-in' },
+      { transform: 'translateY(-180%) rotate(-10deg)', opacity: 1, offset: 0.12, easing: 'cubic-bezier(.55,0,1,.45)' },
+      { transform: 'translateY(0) rotate(0) scale(1.2, 0.76)', offset: IMPACT, easing: 'ease-out' },
+      { transform: 'translateY(-12%) scale(0.93, 1.09)', offset: 0.68, easing: 'ease-in' },
+      { transform: 'translateY(0) scale(1.05, 0.95)', offset: 0.84 },
+      { transform: 'none', opacity: 1 },
+    ], { duration: DUR, delay: DELAY, fill: 'both' })).finished;
   }
 
   // Back to the box (used by "Start over"): the art shrinks away, the box drops in.
@@ -391,6 +485,56 @@
       ], { duration: rand(900, 1300), easing: 'cubic-bezier(.15,.75,.3,1)' });
       cleanupOnFinish(anim, el);
     }
+  }
+
+  const topOf = (r) => ({ x: r.x, y: r.y, w: r.w, h: r.h * 0.3 });
+
+  function coins(rect, color = '#f5b400', count = 14) {
+    const s = sceneScale();
+    const cx = rect.x + rect.w / 2;
+    const cy = rect.y + rect.h * 0.6;
+    const reach = Math.max(50, sceneEl.clientWidth * 0.12);
+    const size = Math.max(7, sceneEl.clientWidth * 0.026);
+    for (let i = 0; i < count; i++) {
+      const el = spawn('fx-coin', { x: cx + rand(-0.3, 0.3) * rect.w, y: cy }, size);
+      el.style.background = color;
+      const angle = rand(-Math.PI * 0.92, -Math.PI * 0.08);
+      const dist = reach * rand(0.4, 1);
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      const fall = reach * rand(0.5, 0.9);
+      const anim = el.animate([
+        { transform: 'translate(0,0) scale(0.4, 0.4)', opacity: 1 },
+        { transform: `translate(${dx * 0.5}px, ${dy * 0.7}px) scale(0.15, 1)`, offset: 0.2 },
+        { transform: `translate(${dx * 0.8}px, ${dy}px) scale(1, 1)`, offset: 0.4, easing: 'ease-in' },
+        { transform: `translate(${dx}px, ${dy + fall * 0.5}px) scale(0.15, 1)`, offset: 0.7 },
+        { transform: `translate(${dx * 1.1}px, ${dy + fall}px) scale(1, 1)`, opacity: 0 },
+      ], { duration: rand(800, 1100), delay: rand(0, 80), easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards' });
+      cleanupOnFinish(anim, el);
+    }
+  }
+
+  // Dust ring where something lands.
+  function ring(rect) {
+    const w = rect.w * sceneScale() * 1.3;
+    const el = spawn('fx-ring', { x: rect.x + rect.w / 2, y: rect.y + rect.h * 0.95 }, w);
+    el.style.height = `${w * 0.28}px`;
+    el.style.marginTop = `${-w * 0.14}px`;
+    cleanupOnFinish(el.animate([
+      { transform: 'scale(0.3)', opacity: 0.9 },
+      { transform: 'scale(1.3)', opacity: 0 },
+    ], { duration: 520, easing: 'ease-out' }), el);
+  }
+
+  function shake() {
+    sceneEl.animate([
+      { transform: 'none' },
+      { transform: 'translate(-3px, 2px)' },
+      { transform: 'translate(3px, -2px)' },
+      { transform: 'translate(-2px, 1px)' },
+      { transform: 'translate(1px, 0)' },
+      { transform: 'none' },
+    ], { duration: 280, easing: 'ease-out' });
   }
 
   const SPARKLE_SVG = '<svg viewBox="0 0 24 24"><path d="M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z"/></svg>';
@@ -596,7 +740,12 @@
     announce('Preferences cleared.');
   });
 
+  const stageEl = document.getElementById('stage');
+  const onScroll = () => stageEl.classList.toggle('is-stuck', window.scrollY > 4);
+  window.addEventListener('scroll', onScroll, { passive: true });
+
   buildScene();
   buildCards();
   render();
+  onScroll();
 })();

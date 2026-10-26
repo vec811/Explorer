@@ -8,7 +8,12 @@ Open `index.html` through any static server, for example `python3 -m http.server
 
 - The default scene is `hospitalisation-empty.svg` with `patient.svg`, `Ward_box.svg`, `Doctor_box.svg` and `Coverage_box.svg` placed on top. Positions are in the 2500 × 1412 artboard and match the reference mock-up.
 - The cards unlock in order: Specialist, then Hospital and ward, then Bill coverage. You choose one option per card.
-- The first choice in a category plays the unboxing animation: the box hops and wobbles, bursts in a puff of confetti, and the illustration springs out. Choosing the other option afterwards flips one illustration over to the other.
+- The title bar and illustration stay pinned to the top while the cards scroll, so every transition stays in view.
+- The first choice in a category plays the unboxing animation: the box hops and wobbles, bursts in a puff of confetti, and the illustration springs out.
+- Switching to the other option plays an animation specific to that category, set by `swap` in `CATEGORIES`:
+  - **Specialist:** one doctor strolls off, the other strolls in, skids to a stop and hops.
+  - **Hospital and ward:** a privacy curtain swishes across and pulls back on the other room.
+  - **Bill coverage:** the old clipboard is flicked away, and the new one slams down with a shake and a burst of silver or gold coins.
 - Every choice can be changed until **Confirm my preferences** is pressed. After that the choices are locked. **Start over** resets the prototype.
 - Tapping a box in the illustration opens its card.
 - With *reduce motion* switched on, the animations become a simple crossfade.

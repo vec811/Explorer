@@ -11,15 +11,17 @@
 </head>
 <body>
   <main class="screen">
-    <header class="topbar">
-      <h1 class="topbar__title">Hospitalisation</h1>
-      <button class="topbar__close" type="button" aria-label="Close">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
-      </button>
-    </header>
+    <div class="stage" id="stage">
+      <header class="topbar">
+        <h1 class="topbar__title">Hospitalisation</h1>
+        <button class="topbar__close" type="button" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+        </button>
+      </header>
 
-    <!-- Scene: layers are positioned by app.js from the SCENE config -->
-    <div class="scene" id="scene" role="img" aria-label="Hospital room illustration"></div>
+      <!-- Scene: layers are positioned by app.js from the SCENE config -->
+      <div class="scene" id="scene" role="img" aria-label="Hospital room illustration"></div>
+    </div>
 
     <section class="intro">
       <h2 class="intro__headline">Find the right coverage to support your care preferences</h2>
