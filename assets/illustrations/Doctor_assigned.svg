@@ -1,0 +1,8 @@
+<svg width="527" height="943" viewBox="0 0 527 943" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- PLACEHOLDER: replace this file with the final Doctor_assigned.svg illustration (same filename). -->
+<rect x="21" y="21" width="485" height="901" rx="32" fill="#EAF2FF" stroke="#1F5BFF" stroke-width="6" stroke-dasharray="24 18"/>
+<circle cx="263.5" cy="422.0" r="49.50000000000001" fill="#1F5BFF" opacity="0.18"/>
+<path d="M241.0 422.0 l15.749999999999998 17.1 l31.499999999999996 -33.75" stroke="#1F5BFF" stroke-width="9.600000000000001" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="263.5" y="512.0" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="45" fill="#1F5BFF">Assigned specialist</text>
+<text x="263.5" y="560.0" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="32" fill="#1F5BFF" opacity="0.75">Doctor_assigned.svg</text>
+</svg>

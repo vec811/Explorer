@@ -1,0 +1,8 @@
+<svg width="564" height="543" viewBox="0 0 564 543" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- PLACEHOLDER: replace this file with the final Shared_room.svg illustration (same filename). -->
+<rect x="22" y="22" width="520" height="499" rx="33" fill="#EEF0FA" stroke="#5A5FB0" stroke-width="7" stroke-dasharray="28 21"/>
+<circle cx="282.0" cy="220.9" r="50.6" fill="#5A5FB0" opacity="0.18"/>
+<path d="M259.0 220.9 l16.099999999999998 17.48 l32.199999999999996 -34.5" stroke="#5A5FB0" stroke-width="11.200000000000001" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="282.0" y="312.9" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="46" fill="#5A5FB0">Shared room</text>
+<text x="282.0" y="362.4" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="33" fill="#5A5FB0" opacity="0.75">Shared_room.svg</text>
+</svg>
