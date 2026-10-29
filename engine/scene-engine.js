@@ -412,7 +412,6 @@
     if (!opt) return slot.boxFrame;
     if (!slot.frames[opt.id]) {
       const frame = makeFrame(opt.image, opt.rect || slot.cat.box.rect);
-      if (opt.clip) frame.img.style.clipPath = opt.clip;
       slot.el.insertBefore(frame.el, slot.hotspot);
       if (opt.front) addFront(slot, frame, opt.front);
       showFrame(frame, false);

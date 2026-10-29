@@ -38,14 +38,13 @@ The first layer is normally the background, with `rect: { x: 0, y: 0, w: artboar
 | `description` | no | Card text shown until a choice is made. |
 | `box` | yes | `{ image, rect }`: the closed box shown by default. Tapping it opens the card. |
 | `swap` | no | Animation for switching between options. See [Swap animations](#swap-animations). Default `pop`. |
-| `options` | one of these two | Two or more `{ id, label, image, rect?, clip?, detail?, description?, front?, accent? }`. |
+| `options` | one of these two | Two or more `{ id, label, image, rect?, detail?, description?, front?, accent? }`. |
 | `amount` | one of these two | A typed number instead of options. See [Amount cards](#amount-cards). |
 
 Option fields:
 
 - `id`, `label` and `image` are required.
 - `rect` is where the option art sits. Leave it out to fit the art inside the box's rectangle, bottom-centred.
-- `clip` crops the option art with a CSS `clip-path`, as for layers. Percentages are of the art file.
 - `detail` is a second line under the label, such as a price ("4,800 SGD per month").
 - `description` is a short paragraph under that.
 - `front` is `{ image, rect }`: a piece of this option's art drawn higher up the layers, at the category's `{ front }` layer. It moves with the option art in every animation. See [Layering recipes](#layering-recipes).
@@ -142,7 +141,7 @@ Polygon percentages are relative to the layer's own file: x% = pixel x ÷ file w
 { front: 'care' },
 ```
 
-The hand shows only while its option is shown, and walks, pops or flips along with it. When a figure's own hand doesn't match its front hand (so both would show), crop the figure's hand off with the option's `clip`, then stand the figure so the front hand's wrist meets the end of the sleeve.
+The hand shows only while its option is shown, and walks, pops or flips along with it. The front hand isn't always a copy of a hand in the figure: it can be the figure's other hand, with their own drawn hand resting elsewhere (on his shoulder). Ask for a mock-up of each figure in place rather than guessing.
 
 **Overlap with no order shown in a mock-up.** Put the slot where the art will look natural once revealed: usually nearer the front when the option art stands on the floor in front of other things.
 
