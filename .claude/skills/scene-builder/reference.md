@@ -38,6 +38,7 @@ The first layer is normally the background, with `rect: { x: 0, y: 0, w: artboar
 | `description` | no | Card text shown until a choice is made. |
 | `box` | yes | `{ image, rect }`: the closed box shown by default. Tapping it opens the card. |
 | `swap` | no | Animation for switching between options. See [Swap animations](#swap-animations). Default `pop`. |
+| `from` | no | With `walk`: the side people walk in from, `'right'` (default) or `'left'`. With `'left'`, the first reveal walks in from the left too, instead of springing out of the box. |
 | `options` | one of these two | Two or more `{ id, label, image, rect?, detail?, description?, front?, accent? }`. |
 | `amount` | one of these two | A typed number instead of options. See [Amount cards](#amount-cards). |
 
@@ -85,7 +86,7 @@ The first time a category gets a choice, its box always plays the **unbox** anim
 | --- | --- | --- |
 | `pop` | The old art shrinks into a puff and the new art pops up with sparkles. | Anything. The default. |
 | `flip` | A quick card flip with a twinkle. | Badges, cards, flat objects. |
-| `walk` | One figure strolls off to the right, the other strolls in, skids to a stop and hops. | People and animals. |
+| `walk` | One figure strolls off to the right, the other strolls in (from the right, or the left with `from: 'left'`), skids to a stop and hops. | People and animals. |
 | `curtain` | A hospital privacy curtain swishes across from the left and pulls back on the new art. | Rooms, places, big furniture. |
 | `slam` | The old art is flicked away; the new art slams down with a shake, a dust ring and coins in the option's `accent` colour. | Money, documents, objects on a surface. |
 

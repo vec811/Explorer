@@ -55,6 +55,7 @@
       if (!cat.title) problems.push(`${where}: missing title.`);
       if (!cat.box || !cat.box.image || !isRect(cat.box.rect)) problems.push(`${where}: box needs { image, rect: { x, y, w, h } }.`);
       if (cat.swap && !SWAPS[cat.swap]) problems.push(`${where}: unknown swap "${cat.swap}". Use one of: ${Object.keys(SWAPS).join(', ')}.`);
+      if (cat.from && cat.from !== 'left' && cat.from !== 'right') problems.push(`${where}: from must be "left" or "right".`);
       if (cat.amount) {
         if (cat.options) problems.push(`${where}: use either amount or options, not both.`);
         if (!cat.amount.image) problems.push(`${where}.amount: missing image.`);
@@ -158,7 +159,8 @@
       ], { duration: 460, delay: OUT, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' })).finished;
     },
 
-    // People: one strolls off to the right, the other strolls in, skids to a stop and hops.
+    // People: one strolls off to the right, the other strolls in (from the right,
+    // or the left with the category's `from: 'left'`), skids to a stop and hops.
     walk(slot, from, to) {
       const OUT = 560;
       const at = (x, y, r) => `translate(${x}%, ${y}%) rotate(${r}deg)`;
@@ -171,17 +173,7 @@
         { transform: at(100, 0, 6), opacity: 0 },
       ], { duration: OUT, easing: 'ease-in', fill: 'forwards' }));
       later(slot, () => sparkles(topOf(to.rect), 5), OUT + 700);
-      return track(slot, to.img.animate([
-        { transform: at(100, 0, -6), opacity: 0 },
-        { transform: at(76, -3, -6), opacity: 1, offset: 0.14 },
-        { transform: at(52, 0, -6), offset: 0.28 },
-        { transform: at(28, -3, -6), offset: 0.42 },
-        { transform: at(-6, 0, -9), offset: 0.6, easing: 'ease-out' },
-        { transform: at(2, 0, 3), offset: 0.72 },
-        { transform: 'translateY(0) scale(1.04, 0.94)', offset: 0.8 },
-        { transform: 'translateY(-6%) scale(0.97, 1.04)', offset: 0.9 },
-        { transform: 'none', opacity: 1 },
-      ], { duration: 1000, delay: OUT - 160, easing: 'linear', fill: 'both' })).finished;
+      return walkIn(slot, to, OUT - 160);
     },
 
     // Places: a privacy curtain swishes across from the left and pulls back on the new art.
@@ -250,6 +242,24 @@
       ], { duration: DUR, delay: DELAY, fill: 'both' })).finished;
     },
   };
+
+  // The incoming half of `walk`, also used to reveal from a box when the
+  // category walks in from the left.
+  function walkIn(slot, to, delay) {
+    const side = slot.cat.from === 'left' ? -1 : 1;
+    const at = (x, y, r) => `translate(${x * side}%, ${y}%) rotate(${r * side}deg)`;
+    return track(slot, to.img.animate([
+      { transform: at(100, 0, -6), opacity: 0 },
+      { transform: at(76, -3, -6), opacity: 1, offset: 0.14 },
+      { transform: at(52, 0, -6), offset: 0.28 },
+      { transform: at(28, -3, -6), offset: 0.42 },
+      { transform: at(-6, 0, -9), offset: 0.6, easing: 'ease-out' },
+      { transform: at(2, 0, 3), offset: 0.72 },
+      { transform: 'translateY(0) scale(1.04, 0.94)', offset: 0.8 },
+      { transform: 'translateY(-6%) scale(0.97, 1.04)', offset: 0.9 },
+      { transform: 'none', opacity: 1 },
+    ], { duration: 1000, delay, easing: 'linear', fill: 'both' })).finished;
+  }
 
   validate(CONFIG);
 
@@ -523,6 +533,13 @@
       puff(from.rect);
       confetti(from.rect);
     }, BURST_AT);
+
+    // People who walk in from the left do so on the first reveal too.
+    if (slot.cat.swap === 'walk' && slot.cat.from === 'left') {
+      later(slot, () => sparkles(topOf(to.rect), 5), BURST_AT + 840);
+      return walkIn(slot, to, BURST_AT - 140);
+    }
+
     later(slot, () => sparkles(to.rect), BURST_AT + 260);
 
     return track(slot, to.img.animate([
