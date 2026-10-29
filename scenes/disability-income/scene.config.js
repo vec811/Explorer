@@ -3,35 +3,96 @@
 // Positions are { x, y, w, h } in the artboard of the background illustration.
 window.SCENE_CONFIG = {
   title: 'Disability Income',
-  sceneLabel: 'TODO: what the illustration shows, for screen readers',
-  headline: 'TODO',
-  body: 'TODO',
-  prompt: 'Let’s work on these considerations:',
+  sceneLabel: 'Park illustration of a man in a wheelchair',
+  // Placeholder copy until the designer sends the overview screen's text.
+  headline: 'Plan for the support you’d need if you couldn’t work',
+  body: 'A disability can stop your income while caregiving, living costs and debts carry on. Work out the monthly support that would keep you and your family on track.',
 
-  artboard: { w: 0, h: 0 }, // TODO: the background SVG's width and height
+  artboard: { w: 1360, h: 765 },
 
-  // Back to front. `{ slot }` marks where a category's box and options sit.
+  // Back to front. `{ slot }` marks where a category's box and options sit;
+  // `{ front }` is where its options' front pieces (the hands on the handle) go.
   layers: [
-    { image: 'assets/TODO-background.svg', rect: { x: 0, y: 0, w: 0, h: 0 } },
+    { image: 'assets/bg.svg', rect: { x: 0, y: 0, w: 1360, h: 765 } },
+    { slot: 'care' },
+    { image: 'assets/Wheelchair.svg', rect: { x: 519, y: 182, w: 456, h: 532 } },
+    { front: 'care' },
+    { slot: 'expenses' },
+    // The armrest and seat side again, in front of whatever sits on his lap.
+    { image: 'assets/Wheelchair-frontlayer.svg', rect: { x: 626, y: 428, w: 150, h: 186 } },
+    { slot: 'debt' },
   ],
 
   categories: [
-    // {
-    //   id: 'short-id',
-    //   title: 'Card title',
-    //   description: 'Card description',
-    //   box: { image: 'assets/Box.svg', rect: { x, y, w, h } },
-    //   swap: 'pop',
-    //   options: [
-    //     { id: 'a', label: 'Option A', image: 'assets/A.svg', rect: { x, y, w, h } },
-    //     { id: 'b', label: 'Option B', image: 'assets/B.svg', rect: { x, y, w, h } },
-    //   ],
-    // },
+    {
+      id: 'care',
+      title: 'Caregiving arrangement',
+      description: 'Financial support for caregiving to help with tasks like feeding, rehabilitation, and essentials like medical supplies can aid your recovery.',
+      box: { image: 'assets/Family_box.svg', rect: { x: 319, y: 109, w: 287, h: 511 } },
+      swap: 'walk',
+      options: [
+        {
+          id: 'family',
+          label: 'Rely on a family member',
+          detail: '4,800 SGD per month',
+          description: 'Cover your family member’s income loss and rest time.',
+          image: 'assets/Family.svg',
+          rect: { x: 286, y: 58, w: 396, h: 605 },
+          front: { image: 'assets/Nurse_and_family_hand-frontlayer.svg', rect: { x: 518, y: 289, w: 32, h: 59 } },
+        },
+        // Helper and nurse are not in the mock-ups: each stands so that their
+        // front hand lands on the handle grip, like the mother's.
+        {
+          id: 'helper',
+          label: 'Hire a domestic helper',
+          detail: '4,330 SGD per month',
+          description: 'Cover the helper’s salary, government levy, and living expenses.',
+          image: 'assets/Helper.svg',
+          rect: { x: 267, y: 85, w: 290, h: 601 },
+          front: { image: 'assets/Helper_hand-frontlayer.svg', rect: { x: 502, y: 298, w: 59, h: 45 } },
+        },
+        {
+          id: 'nurse',
+          label: 'Engage a home nursing service',
+          detail: '6,400 SGD per month',
+          description: 'Cover the cost of home-based care from a nurse or professional caregiver.',
+          image: 'assets/Nurse.svg',
+          rect: { x: 266, y: 47, w: 293, h: 615 },
+          front: { image: 'assets/Nurse_and_family_hand-frontlayer.svg', rect: { x: 518, y: 289, w: 32, h: 59 } },
+        },
+      ],
+    },
+    {
+      id: 'expenses',
+      title: 'Monthly expenses',
+      // Placeholder copy until the designer sends this question's screen.
+      description: 'What are your monthly living expenses? Consider food, utilities, transport, and insurance premiums.',
+      box: { image: 'assets/Cash_box.svg', rect: { x: 708, y: 347, w: 155, h: 119 } },
+      amount: {
+        label: 'Monthly expenses',
+        unit: 'SGD per month',
+        image: 'assets/Stacks_of_cash.svg',
+        rect: { x: 704, y: 370, w: 174, h: 104 },
+      },
+    },
+    {
+      id: 'debt',
+      title: 'Debt repayments',
+      description: 'What is your monthly payment towards debts? Consider credit card bills, mortgage, and car loan.',
+      box: { image: 'assets/Bill_box.svg', rect: { x: 1074, y: 383, w: 143, h: 107 } },
+      amount: {
+        label: 'Monthly debt repayments',
+        unit: 'SGD per month',
+        image: 'assets/Bills_and_loans.svg',
+        rect: { x: 1048, y: 397, w: 181, h: 75 },
+      },
+    },
   ],
 
   // Used by the preview script to compare renders against the mock-ups.
+  // Amount categories take a number.
   references: [
-    // { image: 'reference/default.png', state: {} },
-    // { image: 'reference/revealed.png', state: { 'short-id': 'a' } },
+    { image: 'reference/default.png', state: {} },
+    { image: 'reference/revealed.png', state: { care: 'family', expenses: 2500, debt: 1200 } },
   ],
 };

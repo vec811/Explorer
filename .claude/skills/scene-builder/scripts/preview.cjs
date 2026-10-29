@@ -61,6 +61,12 @@ function serve() {
 }
 
 const dataUrl = (buf, mime = 'image/png') => `data:${mime};base64,${buf.toString('base64')}`;
+// Amount categories are filled in with a sample number instead of an option.
+const SAMPLE_AMOUNT = 1500;
+const pickFor = (c, n) => (c.amount ? SAMPLE_AMOUNT : c.options[Math.min(n, c.options.length - 1)].id);
+const labelFor = (c, n) => (c.amount
+  ? `${SAMPLE_AMOUNT.toLocaleString('en')} ${c.amount.unit || ''}`.trim()
+  : c.options[Math.min(n, c.options.length - 1)].label);
 const problems = [];
 
 function watch(page) {
@@ -112,13 +118,13 @@ async function sheet(browser, file, title, items, columns = 1) {
     await phone.screenshot({ path: f });
     written.push(f);
 
-    const maxOptions = Math.max(...config.categories.map((c) => c.options.length));
+    const maxOptions = Math.max(1, ...config.categories.map((c) => (c.options || []).length));
     for (let n = 0; n < maxOptions; n++) {
-      const picks = config.categories.map((c) => [c.id, c.options[Math.min(n, c.options.length - 1)].id]);
+      const picks = config.categories.map((c) => [c.id, pickFor(c, n)]);
       await phone.evaluate((p) => p.forEach(([c, o]) => window.SceneEngine.select(c, o)), picks);
       await phone.waitForTimeout(500);
       const shot = await phone.locator('.scene').screenshot();
-      const labels = config.categories.map((c) => c.options[Math.min(n, c.options.length - 1)].label).join(' · ');
+      const labels = config.categories.map((c) => labelFor(c, n)).join(' · ');
       f = path.join(outDir, `phone-option-${n + 1}.png`);
       await sheet(browser, f, `Option ${n + 1} in every category`, [{ label: labels, src: dataUrl(shot) }]);
       written.push(f);
@@ -155,8 +161,8 @@ async function sheet(browser, file, title, items, columns = 1) {
         await page.goto(`${base}?bare`);
         await page.waitForTimeout(800);
         const frames = [];
-        const run = async (opt, times, name) => {
-          await page.evaluate(([c, o]) => window.SceneEngine.select(c, o), [cat.id, opt.id]);
+        const run = async (pick, times, name) => {
+          await page.evaluate(([c, o]) => window.SceneEngine.select(c, o), [cat.id, pick]);
           let t = 0;
           for (const at of times) {
             await page.waitForTimeout(at - t);
@@ -165,8 +171,8 @@ async function sheet(browser, file, title, items, columns = 1) {
           }
           await page.waitForTimeout(1600 - t);
         };
-        await run(cat.options[0], [150, 450, 750, 1100], 'Unbox');
-        await run(cat.options[1], [200, 450, 700, 1000], `Swap (${cat.swap || 'pop'})`);
+        await run(pickFor(cat, 0), [150, 450, 750, 1100], 'Unbox');
+        if (!cat.amount) await run(pickFor(cat, 1), [200, 450, 700, 1000], `Swap (${cat.swap || 'pop'})`);
         await page.close();
         f = path.join(outDir, `anim-${cat.id}.png`);
         await sheet(browser, f, `${cat.title}: animation frames`, frames, 4);
