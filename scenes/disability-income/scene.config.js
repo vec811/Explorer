@@ -40,16 +40,17 @@ window.SCENE_CONFIG = {
           rect: { x: 286, y: 58, w: 396, h: 605 },
           front: { image: 'assets/Nurse_and_family_hand-frontlayer.svg', rect: { x: 518, y: 289, w: 32, h: 59 } },
         },
-        // The nurse is measured from reference/nurse.png: her own hand rests on
-        // his shoulder and the front hand is her other hand, on the grip. The
-        // helper is not in a mock-up and is placed the same way.
+        // Helper and nurse are measured from reference/helper.png and nurse.png:
+        // each one's own hand rests on his shoulder and the front hand is their
+        // other hand, on the grip. (The helper mock-up shows the nurse's hand on
+        // the grip; she uses her own skin-toned hand file instead.)
         {
           id: 'helper',
           label: 'Hire a domestic helper',
           detail: '4,330 SGD per month',
           description: 'Cover the helper’s salary, government levy, and living expenses.',
           image: 'assets/Helper.svg',
-          rect: { x: 423, y: 67, w: 290, h: 601 },
+          rect: { x: 409, y: 79, w: 290, h: 601 },
           front: { image: 'assets/Helper_hand-frontlayer.svg', rect: { x: 508, y: 307, w: 59, h: 45 } },
         },
         {
