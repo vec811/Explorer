@@ -18,11 +18,13 @@
     lockedIn: 'Your preferences are locked in.',
     startOver: 'Start over',
     close: 'Close',
+    amountSave: 'Save',
   };
 
   const CONFETTI = ['#d9232e', '#ab6142', '#7f4228', '#24a04d', '#1f5bff', '#f5b400', '#ececec'];
 
   const app = document.getElementById('app');
+  const AMOUNT = 'amount';
 
   // ---------- Config ----------
 
@@ -53,7 +55,13 @@
       if (!cat.title) problems.push(`${where}: missing title.`);
       if (!cat.box || !cat.box.image || !isRect(cat.box.rect)) problems.push(`${where}: box needs { image, rect: { x, y, w, h } }.`);
       if (cat.swap && !SWAPS[cat.swap]) problems.push(`${where}: unknown swap "${cat.swap}". Use one of: ${Object.keys(SWAPS).join(', ')}.`);
-      if (!Array.isArray(cat.options) || cat.options.length < 2) problems.push(`${where}: needs at least two options.`);
+      if (cat.amount) {
+        if (cat.options) problems.push(`${where}: use either amount or options, not both.`);
+        if (!cat.amount.image) problems.push(`${where}.amount: missing image.`);
+        if (cat.amount.rect && !isRect(cat.amount.rect)) problems.push(`${where}.amount: rect needs { x, y, w, h }.`);
+        return;
+      }
+      if (!Array.isArray(cat.options) || cat.options.length < 2) problems.push(`${where}: needs at least two options, or an amount.`);
       const optIds = new Set();
       (cat.options || []).forEach((o, j) => {
         const ow = `${where}.options[${j}]`;
@@ -62,13 +70,15 @@
         if (!o.label) problems.push(`${ow}: missing label.`);
         if (!o.image) problems.push(`${ow}: missing image.`);
         if (o.rect && !isRect(o.rect)) problems.push(`${ow}: rect needs { x, y, w, h }.`);
+        if (o.front && (!o.front.image || !isRect(o.front.rect))) problems.push(`${ow}: front needs { image, rect: { x, y, w, h } }.`);
       });
     });
     (c.layers || []).forEach((l, i) => {
-      if (l.slot) {
-        if (!ids.has(l.slot)) problems.push(`layers[${i}]: slot "${l.slot}" has no matching category id.`);
+      if (l.slot || l.front) {
+        const id = l.slot || l.front;
+        if (!ids.has(id)) problems.push(`layers[${i}]: "${id}" has no matching category id.`);
       } else if (!l.image || !isRect(l.rect)) {
-        problems.push(`layers[${i}]: needs { image, rect: { x, y, w, h } } or { slot: "<category id>" }.`);
+        problems.push(`layers[${i}]: needs { image, rect: { x, y, w, h } }, { slot: "<category id>" } or { front: "<category id>" }.`);
       }
     });
     if (problems.length) fail(problems);
@@ -245,23 +255,33 @@
 
   const SCENE = CONFIG.artboard;
   const TEXT = { ...TEXT_DEFAULTS, ...(CONFIG.text || {}), ...(CONFIG.prompt ? { prompt: CONFIG.prompt } : {}) };
-  const CATEGORIES = CONFIG.categories;
+  // An amount category behaves like a category with one option, revealed once
+  // a number is entered.
+  const CATEGORIES = CONFIG.categories.map((c) => (c.amount
+    ? { ...c, options: [{ id: AMOUNT, label: '', image: c.amount.image, rect: c.amount.rect, accent: c.amount.accent }] }
+    : c));
   const UNLOCK_IN_ORDER = CONFIG.unlockInOrder !== false;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const animated = () => !STATIC && !reduceMotion.matches;
 
   const state = {
     choice: Object.fromEntries(CATEGORIES.map((c) => [c.id, null])),
+    amount: Object.fromEntries(CATEGORIES.map((c) => [c.id, null])),
     open: CATEGORIES[0].id,
     committed: false,
   };
 
   const slots = {};
+  const fronts = {};
   const cards = {};
   let sceneEl, fxEl, stageEl, cardsEl, commitBtn, resetBtn, statusEl, liveEl;
 
   const catById = (id) => CATEGORIES.find((c) => c.id === id);
   const optById = (cat, id) => cat.options.find((o) => o.id === id);
+  const formatAmount = (n) => n.toLocaleString('en', { maximumFractionDigits: 2 });
+  const choiceText = (cat) => (cat.amount
+    ? [formatAmount(state.amount[cat.id]), cat.amount.unit].filter(Boolean).join(' ')
+    : optById(cat, state.choice[cat.id]).label);
   const isUnlocked = (i) => !UNLOCK_IN_ORDER || CATEGORIES.slice(0, i).every((c) => state.choice[c.id]);
 
   function announce(msg) {
@@ -330,6 +350,9 @@
       if (layer.slot) {
         sceneEl.append(buildSlot(catById(layer.slot)));
         placed.add(layer.slot);
+      } else if (layer.front) {
+        fronts[layer.front] = el('div', 'scene__slot');
+        sceneEl.append(fronts[layer.front]);
       } else {
         const img = makeImg(layer.image, 'scene__layer');
         place(img, layer.rect);
@@ -339,12 +362,20 @@
     }
     // A category without a { slot } layer goes on top.
     CATEGORIES.filter((c) => !placed.has(c.id)).forEach((c) => sceneEl.append(buildSlot(c)));
+    // Option front pieces without a { front } layer go on top too.
+    CATEGORIES.filter((c) => !fronts[c.id] && c.options.some((o) => o.front)).forEach((c) => {
+      fronts[c.id] = el('div', 'scene__slot');
+      sceneEl.append(fronts[c.id]);
+    });
 
     fxEl = el('div', 'scene__fx');
     sceneEl.append(fxEl);
 
     // Warm the cache so reveals never flash in half-loaded.
-    CATEGORIES.forEach((c) => c.options.forEach((o) => { new Image().src = o.image; }));
+    CATEGORIES.forEach((c) => c.options.forEach((o) => {
+      new Image().src = o.image;
+      if (o.front) new Image().src = o.front.image;
+    }));
   }
 
   function buildSlot(cat) {
@@ -364,7 +395,7 @@
 
     slots[cat.id] = {
       el: slotEl, cat, hotspot, boxFrame, frames: { box: boxFrame }, visible: boxFrame,
-      token: 0, anims: [], timers: [], fx: [], hintTimer: null,
+      token: 0, anims: [], ghostAnims: [], timers: [], fx: [], hintTimer: null,
     };
     return slotEl;
   }
@@ -381,11 +412,41 @@
     if (!opt) return slot.boxFrame;
     if (!slot.frames[opt.id]) {
       const frame = makeFrame(opt.image, opt.rect || slot.cat.box.rect);
-      frame.el.style.visibility = 'hidden';
       slot.el.insertBefore(frame.el, slot.hotspot);
+      if (opt.front) addFront(slot, frame, opt.front);
+      showFrame(frame, false);
       slot.frames[opt.id] = frame;
     }
     return slot.frames[opt.id];
+  }
+
+  // An option's front piece is drawn higher up the layers (where its { front }
+  // layer sits) but moves with the option art: it sits in a box the size of the
+  // art and replays every animation the art plays.
+  function addFront(slot, frame, front) {
+    const r = frame.rect;
+    const ghostEl = el('div', 'scene__frame');
+    place(ghostEl, r);
+    const mover = el('div', 'scene__ghost');
+    const img = makeImg(front.image, 'scene__layer');
+    img.style.left = pct(front.rect.x - r.x, r.w);
+    img.style.top = pct(front.rect.y - r.y, r.h);
+    img.style.width = pct(front.rect.w, r.w);
+    img.style.height = pct(front.rect.h, r.h);
+    mover.append(img);
+    ghostEl.append(mover);
+    fronts[slot.cat.id].append(ghostEl);
+    frame.ghost = ghostEl;
+    const animateArt = frame.img.animate.bind(frame.img);
+    frame.img.animate = (keyframes, options) => {
+      slot.ghostAnims.push(mover.animate(keyframes, options));
+      return animateArt(keyframes, options);
+    };
+  }
+
+  function showFrame(frame, on) {
+    frame.el.style.visibility = on ? '' : 'hidden';
+    if (frame.ghost) frame.ghost.style.visibility = on ? '' : 'hidden';
   }
 
   function track(slot, anim) {
@@ -401,13 +462,15 @@
   // Snap a slot to its settled state: only `visible` shown, no transforms.
   function settle(slot) {
     slot.anims.forEach((a) => a.cancel());
+    slot.ghostAnims.forEach((a) => a.cancel());
     slot.timers.forEach(clearTimeout);
     slot.fx.forEach((node) => node.remove());
     slot.anims = [];
+    slot.ghostAnims = [];
     slot.timers = [];
     slot.fx = [];
     for (const f of Object.values(slot.frames)) {
-      f.el.style.visibility = f === slot.visible ? '' : 'hidden';
+      showFrame(f, f === slot.visible);
       f.img.style.opacity = '';
     }
   }
@@ -426,8 +489,8 @@
 
     slot.visible = to;
     if (STATIC) { settle(slot); return; }
-    from.el.style.visibility = '';
-    to.el.style.visibility = '';
+    showFrame(from, true);
+    showFrame(to, true);
 
     let done;
     if (reduceMotion.matches) done = crossfade(slot, from, to);
@@ -694,30 +757,76 @@
       const body = el('div', 'card__body');
       body.id = bodyId;
       const inner = el('div', 'card__body-inner');
-      const fieldset = el('fieldset', 'options');
-      const legend = el('legend', 'sr-only', cat.title);
-      fieldset.append(legend);
-      const inputs = cat.options.map((o) => {
-        const label = el('label', 'option');
-        const input = el('input');
-        input.type = 'radio';
-        input.name = `cat-${i}`;
-        input.value = o.id;
-        input.addEventListener('change', () => choose(cat, o.id));
-        const box = el('span', 'option__box');
-        box.append(el('span', 'option__radio'), document.createTextNode(o.label));
-        label.append(input, box);
-        fieldset.append(label);
-        return input;
-      });
-      inner.append(fieldset);
+      let inputs = [];
+      let amountEl = null;
+      if (cat.amount) {
+        amountEl = buildAmount(cat, i);
+        inner.append(amountEl.el);
+      } else {
+        const fieldset = el('fieldset', 'options');
+        const legend = el('legend', 'sr-only', cat.title);
+        fieldset.append(legend);
+        inputs = cat.options.map((o) => {
+          const label = el('label', 'option');
+          const input = el('input');
+          input.type = 'radio';
+          input.name = `cat-${i}`;
+          input.value = o.id;
+          input.addEventListener('change', () => choose(cat, o.id));
+          const box = el('span', 'option__box');
+          const text = el('span', 'option__text');
+          text.append(el('span', 'option__label', o.label));
+          if (o.detail) text.append(el('span', 'option__detail', o.detail));
+          if (o.description) text.append(el('span', 'option__desc', o.description));
+          box.append(el('span', 'option__radio'), text);
+          label.append(input, box);
+          fieldset.append(label);
+          return input;
+        });
+        inner.append(fieldset);
+      }
       body.append(inner);
       card.append(header, body);
 
       header.addEventListener('click', () => toggleCard(cat.id));
       cardsEl.append(card);
-      cards[cat.id] = { el: card, header, inputs, choiceEl, body: inner };
+      cards[cat.id] = { el: card, header, inputs, amount: amountEl, choiceEl, body: inner };
     });
+  }
+
+  // A typed amount: the box opens once a number is saved (Enter, leaving the
+  // field, or the button), and closes again if the field is cleared.
+  function buildAmount(cat, i) {
+    const a = cat.amount;
+    const wrap = el('div', 'amount');
+    const field = el('label', 'amount__field');
+    const input = el('input', 'amount__input');
+    input.type = 'text';
+    input.inputMode = 'decimal';
+    input.autocomplete = 'off';
+    input.id = `amount-${i}`;
+    if (a.placeholder) input.placeholder = a.placeholder;
+    const row = el('span', 'amount__row');
+    row.append(input);
+    if (a.unit) row.append(el('span', 'amount__unit', a.unit));
+    field.append(el('span', 'amount__label', a.label || cat.title), row);
+    const save = el('button', 'amount__save', TEXT.amountSave);
+    save.type = 'button';
+    wrap.append(field, save);
+
+    const sync = () => { save.disabled = state.committed || !input.value.trim(); };
+    const submit = () => {
+      const raw = input.value.replace(/[^\d.]/g, '');
+      enter(cat, raw === '' || Number.isNaN(Number(raw)) ? null : Number(raw));
+      if (state.amount[cat.id] != null) input.value = formatAmount(state.amount[cat.id]);
+      sync();
+    };
+    input.addEventListener('input', sync);
+    input.addEventListener('change', submit);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+    save.addEventListener('click', submit);
+    sync();
+    return { el: wrap, input, save, sync };
   }
 
   function render() {
@@ -737,7 +846,12 @@
         input.checked = input.value === chosen;
         input.disabled = state.committed;
       });
-      c.choiceEl.textContent = chosen ? optById(cat, chosen).label : '';
+      if (c.amount) {
+        c.amount.input.disabled = state.committed;
+        if (!chosen && document.activeElement !== c.amount.input) c.amount.input.value = '';
+        c.amount.sync();
+      }
+      c.choiceEl.textContent = chosen ? choiceText(cat) : '';
     });
 
     const done = CATEGORIES.filter((c) => state.choice[c.id]).length;
@@ -751,8 +865,7 @@
 
     sceneEl.classList.toggle('is-committed', state.committed);
     sceneEl.setAttribute('aria-label', `${CONFIG.sceneLabel || 'Illustration'}. ` + CATEGORIES.map((cat) => {
-      const opt = state.choice[cat.id] && optById(cat, state.choice[cat.id]);
-      return `${cat.title}: ${opt ? opt.label : 'not chosen yet'}.`;
+      return `${cat.title}: ${state.choice[cat.id] ? choiceText(cat) : 'not chosen yet'}.`;
     }).join(' '));
 
     updateHints();
@@ -773,10 +886,22 @@
     state.choice[cat.id] = optionId;
     const opt = optById(cat, optionId);
     showInSlot(cat, opt);
-    announce(`${cat.title}: ${opt.label} selected.`);
+    announce(opt ? `${cat.title}: ${choiceText(cat)} ${cat.amount ? 'saved' : 'selected'}.` : `${cat.title}: cleared.`);
     render();
 
     if (nextWasLocked && isUnlocked(i + 1)) flash(cards[next.id].el, 'is-unlocking');
+  }
+
+  function enter(cat, value) {
+    if (state.committed) return;
+    const changed = value !== state.amount[cat.id];
+    state.amount[cat.id] = value;
+    if (value == null) choose(cat, null);
+    else if (!state.choice[cat.id]) choose(cat, AMOUNT);
+    else if (changed) {
+      announce(`${cat.title}: ${choiceText(cat)} saved.`);
+      render();
+    }
   }
 
   function flash(node, className) {
@@ -823,6 +948,7 @@
     state.committed = false;
     CATEGORIES.forEach((cat) => {
       state.choice[cat.id] = null;
+      state.amount[cat.id] = null;
       showInSlot(cat, null);
     });
     state.open = CATEGORIES[0].id;
@@ -839,8 +965,14 @@
   window.SceneEngine = {
     config: CONFIG,
     state,
+    // For an amount category, pass the number instead of an option id.
     select(catId, optId) {
       const cat = catById(catId);
+      if (cat && cat.amount && typeof optId === 'number') {
+        state.open = catId;
+        enter(cat, optId);
+        return;
+      }
       if (!cat || !optById(cat, optId)) throw new Error(`No option ${catId}.${optId}`);
       state.open = catId;
       choose(cat, optId);

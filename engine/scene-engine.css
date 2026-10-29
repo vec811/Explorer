@@ -115,6 +115,8 @@ button { font: inherit; color: inherit; }
 }
 
 .scene__frame { position: absolute; }
+/* Moves an option's front piece in step with the option art. */
+.scene__ghost { position: absolute; inset: 0; transform-origin: 50% 100%; will-change: transform, opacity; }
 
 .scene__hotspot {
   position: absolute;
@@ -303,6 +305,60 @@ button { font: inherit; color: inherit; }
 }
 .option input:checked + .option__box .option__radio { border-color: var(--red); }
 .option input:checked + .option__box .option__radio::after { transform: scale(1); }
+
+.option__text { display: grid; gap: 2px; }
+.option__box:has(.option__detail, .option__desc) { align-items: flex-start; }
+.option__box:has(.option__detail, .option__desc) .option__radio { margin-top: 2px; }
+.option__detail { font-size: 14.5px; font-weight: 400; color: var(--ink-soft); }
+.option__desc { margin-top: 6px; font-size: 14px; font-weight: 400; line-height: 1.4; color: var(--ink-soft); }
+
+/* Typed amount */
+.amount { display: grid; gap: 14px; padding: 0 18px 18px; }
+.amount__field {
+  display: grid;
+  gap: 6px;
+  padding: 14px 14px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: text;
+  transition: border-color .2s ease;
+}
+.amount__field:focus-within { border-color: var(--red); }
+.amount__label { font-size: 13.5px; color: var(--ink-soft); }
+.amount__row { display: flex; align-items: baseline; gap: 8px; padding-bottom: 6px; border-bottom: 1.5px solid var(--line); }
+.amount__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  outline: none;
+}
+.amount__input:disabled { color: var(--ink-soft); }
+.amount__unit { flex: none; font-size: 15.5px; color: var(--ink-soft); }
+.amount__save {
+  justify-self: center;
+  min-width: 160px;
+  min-height: 44px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .2s ease, transform .15s ease;
+}
+.amount__save:disabled { background: #d6d6d6; cursor: not-allowed; }
+.amount__save:not(:disabled):active { transform: scale(.98); }
+.amount__save:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
 .card.is-unlocking { animation: unlock .6s cubic-bezier(.3, 1.4, .5, 1); }
 @keyframes unlock {

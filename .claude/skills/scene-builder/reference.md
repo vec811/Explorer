@@ -25,6 +25,7 @@ Listed back to front. Each entry is one of these:
 - `{ image, rect }`: a fixed illustration (the background, characters, furniture).
 - `{ image, rect, clip }`: the same, cropped with a CSS `clip-path` (see [Layering recipes](#layering-recipes)).
 - `{ slot: '<category id>' }`: where that category's box, and later its option art, is drawn.
+- `{ front: '<category id>' }`: where that category's options' `front` pieces are drawn. See [Layering recipes](#layering-recipes).
 
 The first layer is normally the background, with `rect: { x: 0, y: 0, w: artboard.w, h: artboard.h }`. A category without a `slot` entry is drawn on top of everything.
 
@@ -37,13 +38,38 @@ The first layer is normally the background, with `rect: { x: 0, y: 0, w: artboar
 | `description` | no | Card text shown until a choice is made. |
 | `box` | yes | `{ image, rect }`: the closed box shown by default. Tapping it opens the card. |
 | `swap` | no | Animation for switching between options. See [Swap animations](#swap-animations). Default `pop`. |
-| `options` | yes | Two or more `{ id, label, image, rect?, accent? }`. |
+| `options` | one of these two | Two or more `{ id, label, image, rect?, detail?, description?, front?, accent? }`. |
+| `amount` | one of these two | A typed number instead of options. See [Amount cards](#amount-cards). |
 
 Option fields:
 
 - `id`, `label` and `image` are required.
 - `rect` is where the option art sits. Leave it out to fit the art inside the box's rectangle, bottom-centred.
+- `detail` is a second line under the label, such as a price ("4,800 SGD per month").
+- `description` is a short paragraph under that.
+- `front` is `{ image, rect }`: a piece of this option's art drawn higher up the layers, at the category's `{ front }` layer. It moves with the option art in every animation. See [Layering recipes](#layering-recipes).
 - `accent` is a CSS colour used by the `slam` swap for its coins (gold `#f5b400`, silver `#c9ced6`).
+
+### Amount cards
+
+When the question asks for a number, give the category `amount` instead of `options`:
+
+```js
+{
+  id: 'debt',
+  title: 'Debt repayments',
+  description: 'What is your monthly payment towards debts? Consider credit card bills, mortgage, and car loan.',
+  box: { image: 'assets/Bill_box.svg', rect: { x: 1074, y: 383, w: 143, h: 107 } },
+  amount: {
+    label: 'Monthly debt repayments',   // above the field; defaults to the title
+    unit: 'SGD per month',              // after the number, and in the card's summary
+    image: 'assets/Bills_and_loans.svg',
+    rect: { x: 1048, y: 397, w: 181, h: 75 },
+  },
+},
+```
+
+The card shows a number field and a Save button. Saving (the button, Enter, or leaving the field) plays the unbox animation the first time; changing the number later just updates the card. Clearing the field puts the box back. `amount` also takes `placeholder`, and `accent` like an option. In `references`, give an amount category a number: `state: { debt: 1200 }`.
 
 Option art may be drawn at a different scale from the scene. The rect handles that, because the art is stretched to fill it. Keep the rect's aspect ratio equal to the file's, or the art will be letterboxed.
 
@@ -80,6 +106,7 @@ To add a new swap, add a function to `SWAPS` in `engine/scene-engine.js` and a r
 | `lockedIn` | `Your preferences are locked in.` |
 | `startOver` | `Start over` |
 | `close` | `Close` (accessible name of the × button) |
+| `amountSave` | `Save` (the button under an amount field) |
 
 ## References
 
@@ -106,6 +133,16 @@ Mock-ups must be full-frame exports of the whole artboard. Any size works, as lo
 
 Polygon percentages are relative to the layer's own file: x% = pixel x ÷ file width, y% = pixel y ÷ file height. Keep the cropped-out area to the part that must sit behind.
 
+**A hand on a handle.** In the disability income scene, the caregiver stands behind the wheelchair but their hand grips its handle. The designer supplies the hand as a separate "frontlayer" file. Give each option its hand as `front`, and add a `{ front }` layer after the wheelchair:
+
+```js
+{ slot: 'care' },
+{ image: 'assets/Wheelchair.svg', rect: W },
+{ front: 'care' },
+```
+
+The hand shows only while its option is shown, and walks, pops or flips along with it. When options share a hand file but aren't in the mock-ups, stand each figure so its own hand sits under the shared one.
+
 **Overlap with no order shown in a mock-up.** Put the slot where the art will look natural once revealed: usually nearer the front when the option art stands on the floor in front of other things.
 
 ## Files
@@ -118,5 +155,5 @@ Polygon percentages are relative to the layer's own file: x% = pixel x ÷ file w
 
 - `?static` turns off all animation (used for screenshots).
 - `?bare` shows only the illustration at full width (used for comparisons).
-- `window.SceneEngine.select(categoryId, optionId)`, `.commit()` and `.reset()` drive the page from the console or a script.
+- `window.SceneEngine.select(categoryId, optionId)`, `.commit()` and `.reset()` drive the page from the console or a script. For an amount category, pass the number as the second argument.
 - A broken config shows a red list of problems on the page and in the console instead of a blank screen.

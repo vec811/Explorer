@@ -65,7 +65,8 @@ Run `look.cjs` on all the files and read the sheet. Then tell the designer which
 
 For each category, in the order the cards should appear, collect:
 - **Title** and **description** for the card.
-- **Options**: each label, and which art it reveals.
+- **Options**: each label, and which art it reveals. Options can also carry a price line and a description (`detail`, `description`), as in an app screen that lists them.
+- **Or a typed amount**: when the app asks for a number (such as "SGD per month") instead of a choice, the card gets a field and the box opens on one piece of art once a number is saved. Read the field label and unit off the screenshot.
 - **Box**: which box it opens. Propose this from the art and mock-ups; ask only if unclear.
 - **Swap animation**: what plays when the user switches between options. Ask with AskUserQuestion, listing the styles from [reference.md](reference.md#swap-animations) and recommending one by subject:
   - People: `walk`.
@@ -105,6 +106,7 @@ Write `layers` back to front: the background, then default-state pieces and `{ s
 
 - What covers what between each box (or its option art) and the pieces around it decides whether the slot goes before or after that piece.
 - If a single file must be partly behind and partly in front of a slot, draw it twice with `clip`, as in the patient example in [reference.md](reference.md#layering-recipes).
+- Files named "frontlayer" are usually a piece to draw in front: a duplicate of part of a fixed piece (a `{ image, rect }` layer after the slot), or a piece of option art such as a hand on a handle (the option's `front`, drawn at a `{ front }` layer). See the hands recipe in [reference.md](reference.md#layering-recipes).
 - Watch for art that is larger than its box once revealed. It may now overlap things the box didn't. Check those overlaps against the revealed mock-up.
 
 ## Step 7: Check
