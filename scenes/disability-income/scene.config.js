@@ -40,16 +40,17 @@ window.SCENE_CONFIG = {
           rect: { x: 286, y: 58, w: 396, h: 605 },
           front: { image: 'assets/Nurse_and_family_hand-frontlayer.svg', rect: { x: 518, y: 289, w: 32, h: 59 } },
         },
-        // Helper and nurse are not in the mock-ups: each stands so that their
-        // front hand lands on the handle grip, like the mother's.
+        // The nurse is measured from reference/nurse.png: her own hand rests on
+        // his shoulder and the front hand is her other hand, on the grip. The
+        // helper is not in a mock-up and is placed the same way.
         {
           id: 'helper',
           label: 'Hire a domestic helper',
           detail: '4,330 SGD per month',
           description: 'Cover the helper’s salary, government levy, and living expenses.',
           image: 'assets/Helper.svg',
-          rect: { x: 267, y: 85, w: 290, h: 601 },
-          front: { image: 'assets/Helper_hand-frontlayer.svg', rect: { x: 502, y: 298, w: 59, h: 45 } },
+          rect: { x: 423, y: 67, w: 290, h: 601 },
+          front: { image: 'assets/Helper_hand-frontlayer.svg', rect: { x: 508, y: 307, w: 59, h: 45 } },
         },
         {
           id: 'nurse',
@@ -57,7 +58,7 @@ window.SCENE_CONFIG = {
           detail: '6,400 SGD per month',
           description: 'Cover the cost of home-based care from a nurse or professional caregiver.',
           image: 'assets/Nurse.svg',
-          rect: { x: 266, y: 47, w: 293, h: 615 },
+          rect: { x: 421, y: 46, w: 293, h: 615 },
           front: { image: 'assets/Nurse_and_family_hand-frontlayer.svg', rect: { x: 518, y: 289, w: 32, h: 59 } },
         },
       ],

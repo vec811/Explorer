@@ -141,7 +141,7 @@ Polygon percentages are relative to the layer's own file: x% = pixel x ÷ file w
 { front: 'care' },
 ```
 
-The hand shows only while its option is shown, and walks, pops or flips along with it. When options share a hand file but aren't in the mock-ups, stand each figure so its own hand sits under the shared one.
+The hand shows only while its option is shown, and walks, pops or flips along with it. The front hand isn't always a copy of a hand in the figure: it can be the figure's other hand, with their own drawn hand resting elsewhere (on his shoulder). Ask for a mock-up of each figure in place rather than guessing.
 
 **Overlap with no order shown in a mock-up.** Put the slot where the art will look natural once revealed: usually nearer the front when the option art stands on the floor in front of other things.
 
