@@ -30,6 +30,7 @@ window.SCENE_CONFIG = {
       description: 'Financial support for caregiving to help with tasks like feeding, rehabilitation, and essentials like medical supplies can aid your recovery.',
       box: { image: 'assets/Family_box.svg', rect: { x: 319, y: 109, w: 287, h: 511 } },
       swap: 'walk',
+      from: 'left',
       options: [
         {
           id: 'family',
